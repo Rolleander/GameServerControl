@@ -28,4 +28,15 @@ public class ServerRoom {
 		return id;
 	}
 	
+	public List<Player> getPlayers() {
+		return players;
+	}
+	
+	public void sendToAll(Object message)
+	{
+		for(Player p: players)
+		{
+			p.getConnection().send(message);
+		}
+	}
 }
