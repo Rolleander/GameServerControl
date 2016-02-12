@@ -1,9 +1,11 @@
 package com.broll.gameserver.sites;
 
+import com.broll.gameserver.ServerControl;
 import com.broll.gameserver.player.Player;
 
-public interface ServerSite<T> {
 
-	public void receive(T message, Player from);
+public interface ServerSite {
+
+	public void receive(ServerControl server, Object message, Player from);
 	
 }
