@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: com.dorkbox:Annotations:2.14">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.dorkbox/Annotations/2.14/eda1582bed08aaddcd7c111ad3ce609531e2941a/Annotations-2.14.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.dorkbox/Annotations/2.14/3821d46cda1671d0ee14dff9723b28a3000ffda9/Annotations-2.14-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
