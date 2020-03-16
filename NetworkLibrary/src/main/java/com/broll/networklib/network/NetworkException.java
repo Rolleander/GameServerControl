@@ -1,4 +1,4 @@
-package com.broll.networklib;
+package com.broll.networklib.network;
 
 public class NetworkException extends RuntimeException {
 

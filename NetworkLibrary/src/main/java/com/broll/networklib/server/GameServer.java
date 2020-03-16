@@ -1,7 +1,7 @@
 package com.broll.networklib.server;
 
 import com.broll.networklib.GameEndpoint;
-import com.broll.networklib.NetworkException;
+import com.broll.networklib.network.NetworkException;
 import com.broll.networklib.network.NetworkRegistry;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Connection;
@@ -23,7 +23,7 @@ public class GameServer extends GameEndpoint<ServerSite> {
     public GameServer() {
     }
 
-    public void connect() {
+    public void open() {
         server.addListener(new ConnectionListener());
         init();
         server.start();

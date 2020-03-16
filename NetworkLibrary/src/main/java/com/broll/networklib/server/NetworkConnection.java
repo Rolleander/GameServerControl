@@ -1,6 +1,6 @@
 package com.broll.networklib.server;
 
-import com.broll.networklib.player.Player;
+import com.broll.networklib.server.impl.Player;
 import com.esotericsoftware.kryonet.Connection;
 
 public class NetworkConnection extends Connection {

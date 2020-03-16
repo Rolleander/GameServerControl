@@ -10,7 +10,7 @@ public class TestServer {
         Log.INFO();
         GameServer server = new GameServer();
         server.register(new TestServerSite());
-        server.connect();
+        server.open();
     }
 
     public static class TestServerSite extends ServerSite {

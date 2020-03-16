@@ -1,7 +1,5 @@
 package com.broll.networklib.network;
 
-import com.broll.networklib.NetworkException;
-import com.broll.networklib.network.nt.NT_RegisterPlayer;
 import com.esotericsoftware.kryo.Kryo;
 import com.google.common.reflect.ClassPath;
 

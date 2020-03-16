@@ -1,4 +1,4 @@
-package com.broll.networklib.player;
+package com.broll.networklib.server.impl;
 
 
 import com.broll.networklib.server.NetworkConnection;
@@ -9,10 +9,27 @@ public class Player {
     private final int id;
     private boolean online;
     private NetworkConnection connection;
+    private ServerLobby serverLobby;
 
     public Player(int id, NetworkConnection connection) {
         this.id = id;
         this.connection = connection;
+    }
+
+    void joinLobby(ServerLobby lobby){
+        this.serverLobby = serverLobby;
+    }
+
+    void leaveLobby(){
+        serverLobby = null;
+    }
+
+    public boolean inLobby(){
+        return serverLobby!=null;
+    }
+
+    public ServerLobby getServerLobby() {
+        return serverLobby;
     }
 
     public void updateOnlineStatus(boolean online) {

@@ -10,6 +10,6 @@ public class NetworkTest {
     public void test(){
         GameServer server = new GameServer();
         
-        server.connect();
+        server.open();
     }
 }
