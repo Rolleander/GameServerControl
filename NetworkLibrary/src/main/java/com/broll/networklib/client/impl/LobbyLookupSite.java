@@ -21,6 +21,8 @@ public class LobbyLookupSite extends ClientSite {
             GameClient lookupClient = new GameClient();
             lookupClient.register(new LobbyLookupSite(request));
             lookupClient.connect(ip);
+            //request server info
+            lookupClient.sendTCP(new NT_ServerInformation());
         } catch (Exception e){
             Log.error("Failed to open lobby lookup client on ip "+ip);
         }

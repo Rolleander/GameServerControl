@@ -1,8 +1,13 @@
 package com.broll.networklib;
 
 import com.broll.networklib.server.GameServer;
+import com.broll.networklib.server.LobbyGameServer;
+import com.broll.networklib.server.LobbyServerSite;
 import com.broll.networklib.server.ServerSite;
+import com.broll.networklib.server.impl.LobbyHandler;
 import com.esotericsoftware.minlog.Log;
+
+import junit.framework.Test;
 
 public class TestServer {
 
@@ -11,6 +16,7 @@ public class TestServer {
         GameServer server = new GameServer();
         server.register(new TestServerSite());
         server.open();
+
     }
 
     public static class TestServerSite extends ServerSite {
@@ -25,4 +31,22 @@ public class TestServer {
 
     }
 
+    private static class LobbyData{
+
+    }
+
+    private static class PlayerData{
+
+    }
+
+    public static class TestSite extends LobbyServerSite<LobbyData, PlayerData>{
+
+        public TestSite(LobbyHandler<LobbyData, PlayerData> lobbyHandler) {
+            super(lobbyHandler);
+        }
+
+        public void trest(){
+
+        }
+    }
 }

@@ -33,10 +33,14 @@ public class LobbyGameClient {
         );
     }
 
-    public void connectToLobby(GameLobby lobby, NetworkRequestAttempt<GameLobby> request) {
+    public void clearClientAuthenticationKey(){
+        ClientAuthenticationKey.clearFileCache();
+    }
+
+    public void connectToLobby(GameLobby lobby, String playerName, NetworkRequestAttempt<GameLobby> request) {
         GameEndpoint.attemptRequest(request, () -> {
             client.connect(lobby.getServerIp());
-            lobbyConnectionSite.tryJoinLobby(lobby, request);
+            lobbyConnectionSite.tryJoinLobby(lobby, playerName, ClientAuthenticationKey.fromFileCache(), request);
         });
     }
 

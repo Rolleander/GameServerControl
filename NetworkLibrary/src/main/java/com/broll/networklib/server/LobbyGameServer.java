@@ -1,36 +1,33 @@
 package com.broll.networklib.server;
 
-import com.broll.networklib.server.GameServer;
-import com.broll.networklib.server.ServerSite;
 import com.broll.networklib.server.impl.ConnectionSite;
 import com.broll.networklib.server.impl.LobbyHandler;
 import com.broll.networklib.server.impl.LobbySite;
 
-public class LobbyGameServer {
+public class LobbyGameServer<L, P> {
 
     private GameServer server;
-    private LobbyHandler lobbyHandler;
+    private LobbyHandler<L,P> lobbyHandler;
+    private ConnectionSite<L,P> connectionSite;
 
-    public LobbyGameServer(){
+    public LobbyGameServer() {
         server = new GameServer();
-        lobbyHandler =new LobbyHandler();
-        register(new ConnectionSite(lobbyHandler));
+        lobbyHandler = new LobbyHandler<>((lobby, players) -> connectionSite.closedLobby(lobby, players));
+        connectionSite = new ConnectionSite(lobbyHandler);
+        register(connectionSite);
         register(new LobbySite(lobbyHandler));
     }
 
-    public LobbyHandler getLobbyHandler() {
-        return lobbyHandler;
-    }
-
-    public void register(ServerSite... sites){
+    public void register(LobbyServerSite<L, P>... sites) {
         server.register(sites);
     }
 
-    public void open(){
+    public void open() {
         server.open();
     }
 
-    public void shutdown(){
+    public void shutdown() {
+        lobbyHandler.closeAllLobbies();
         server.shutdown();
     }
 }

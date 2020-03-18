@@ -1,9 +1,11 @@
 package com.broll.networklib.client.impl;
 
 import com.broll.networklib.PackageReceiver;
+import com.broll.networklib.client.ClientAuthenticationKey;
 import com.broll.networklib.client.ClientSite;
 import com.broll.networklib.network.NetworkRequestAttempt;
 import com.broll.networklib.network.nt.NT_ChatMessage;
+import com.broll.networklib.network.nt.NT_LobbyJoin;
 import com.broll.networklib.network.nt.NT_LobbyPlayerInfo;
 import com.broll.networklib.network.nt.NT_LobbyUpdate;
 import com.broll.networklib.network.nt.NT_LobbyUnjoin;
@@ -24,10 +26,15 @@ public class LobbyConnectionSite extends ClientSite {
 
     }
 
-    public void tryJoinLobby(GameLobby lobby, NetworkRequestAttempt<GameLobby> request) {
+    public void tryJoinLobby(GameLobby lobby, String playerName, ClientAuthenticationKey secret, NetworkRequestAttempt<GameLobby> request) {
         this.lobby = lobby;
         this.request = request;
         this.players = new HashMap<>();
+        NT_LobbyJoin join = new NT_LobbyJoin();
+        join.lobbyId = lobby.getLobbyId();
+        join.authenticationKey = secret.getSecret();
+        join.name = playerName;
+        client.sendTCP(join);
     }
 
     @PackageReceiver
@@ -44,6 +51,32 @@ public class LobbyConnectionSite extends ClientSite {
             if (listener != null) {
                 listener.lobbyUpdated();
             }
+        }
+    }
+
+    @PackageReceiver
+    public void receive(NT_ChatMessage chat) {
+        if (lobby != null) {
+            ChatMessageListener listener = lobby.getChatMessageListener();
+            if (listener != null) {
+                if (chat.from == null) {
+                    //message from system
+                    listener.fromGame(chat.message);
+                } else {
+                    //from player
+                    lobby.getPlayer(chat.from).ifPresent(player -> listener.fromPlayer(chat.message, player));
+                }
+            }
+        }
+    }
+
+    @PackageReceiver
+    public void receive(NT_LobbyUnjoin unjoin) {
+        //player could not join lobby / was removed
+        if (request != null) {
+            lobby = null;
+            players.clear();
+            request.failure(unjoin.reason);
         }
     }
 
@@ -91,29 +124,4 @@ public class LobbyConnectionSite extends ClientSite {
         }
     }
 
-    @PackageReceiver
-    public void receive(NT_ChatMessage chat) {
-        if (lobby != null) {
-            ChatMessageListener listener = lobby.getChatMessageListener();
-            if (listener != null) {
-                if (chat.from == null) {
-                    //message from system
-                    listener.fromGame(chat.message);
-                } else {
-                    //from player
-                    lobby.getPlayer(chat.from).ifPresent(player -> listener.fromPlayer(chat.message, player));
-                }
-            }
-        }
-    }
-
-    @PackageReceiver
-    public void receive(NT_LobbyUnjoin unjoin) {
-        //player could not join lobby / was removed
-        if (request != null) {
-            lobby = null;
-            players.clear();
-            request.failure(unjoin.reason);
-        }
-    }
 }

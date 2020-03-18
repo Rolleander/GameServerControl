@@ -3,25 +3,53 @@ package com.broll.networklib.server.impl;
 
 import com.broll.networklib.server.NetworkConnection;
 
-public class Player {
+public class Player<P> {
 
     private String name;
     private final int id;
     private boolean online;
     private NetworkConnection connection;
     private ServerLobby serverLobby;
+    private String authenticationKey;
+    private PlayerListener listener;
+    private P data;
 
-    public Player(int id, NetworkConnection connection) {
+    public Player(int id,String authenticationKey, NetworkConnection connection) {
         this.id = id;
+        this.authenticationKey = authenticationKey;
         this.connection = connection;
     }
 
-    void joinLobby(ServerLobby lobby){
+    public void setData(P data) {
+        this.data = data;
+    }
+
+    public P getData() {
+        return data;
+    }
+
+    public void sendTCP(Object object){
+        connection.sendTCP(object);
+    }
+
+    public void sendUDP(Object object){
+        connection.sendUDP(object);
+    }
+
+    public void setListener(PlayerListener listener) {
+        this.listener = listener;
+    }
+
+    PlayerListener getListener() {
+        return listener;
+    }
+
+    void setLobby(ServerLobby lobby){
         this.serverLobby = serverLobby;
     }
 
-    void leaveLobby(){
-        serverLobby = null;
+     String getAuthenticationKey() {
+        return authenticationKey;
     }
 
     public boolean inLobby(){
