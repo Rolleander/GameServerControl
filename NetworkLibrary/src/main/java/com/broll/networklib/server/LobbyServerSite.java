@@ -10,7 +10,7 @@ public abstract class LobbyServerSite<L, P> extends ServerSite {
 
     protected LobbyHandler<L, P> lobbyHandler;
 
-    public LobbyServerSite(LobbyHandler<L,P> lobbyHandler){
+    public void init(LobbyHandler<L, P> lobbyHandler){
         this.lobbyHandler = lobbyHandler;
     }
 

@@ -7,4 +7,8 @@ public interface LobbyUpdateListener {
     void playerJoined(LobbyPlayer player);
 
     void playerLeft(LobbyPlayer player);
+
+    void kickedFromLobby();
+
+    void closed();
 }

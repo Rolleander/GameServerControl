@@ -14,14 +14,24 @@ public class LobbyHandler<L, P> {
     private AtomicInteger idCounter;
     private Map<Integer, ServerLobby<L,P>> lobbies = new ConcurrentHashMap<>();
     private LobbyCloseListener listener;
+    private ILobbyCreationRequest<L,P> lobbyCreationRequestHandler = (player, lobbyName, settings)->this.openLobby(lobbyName, settings);
 
     public LobbyHandler(LobbyCloseListener listener) {
         this.listener = listener;
     }
 
-    public ServerLobby<L,P> openLobby(String name) {
+    public void setLobbyCreationRequestHandler(ILobbyCreationRequest<L, P> lobbyCreationRequestHandler) {
+        this.lobbyCreationRequestHandler = lobbyCreationRequestHandler;
+    }
+
+    ILobbyCreationRequest<L, P> getLobbyCreationRequestHandler() {
+        return lobbyCreationRequestHandler;
+    }
+
+    public ServerLobby<L,P> openLobby(String name, Object settings) {
         int id = idCounter.getAndIncrement();
-        ServerLobby lobby = new ServerLobby(name, id);
+        ServerLobby lobby = new ServerLobby(this, name, id);
+        lobby.setSettings(settings);
         lobbies.put(id, lobby);
         return lobby;
     }
@@ -41,6 +51,14 @@ public class LobbyHandler<L, P> {
         lobbies.remove(lobby.getId());
     }
 
+    public void kickPlayer(ServerLobby<L, P> lobby, Player<P> player){
+        lobby.removePlayer(player);
+        listener.kickedPlayer(player);
+        if(lobby.getPlayerCount()==0){
+            closeLobby(lobby);
+        }
+    }
+
     public List<Player> transferPlayers(ServerLobby<L, P> from, ServerLobby<L, P> to) {
         List<Player> missedPlayers = new ArrayList<>();
         from.getPlayers().forEach(player -> {
@@ -56,6 +74,9 @@ public class LobbyHandler<L, P> {
         if (toLobby.addPlayer(player)) {
             if (fromLobby != null) {
                 fromLobby.removePlayer(player);
+                if(fromLobby.getPlayerCount()==0){
+                    closeLobby(fromLobby);
+                }
             }
             if(player.getListener()!=null){
                 player.getListener().switchedLobby(player, fromLobby, toLobby);

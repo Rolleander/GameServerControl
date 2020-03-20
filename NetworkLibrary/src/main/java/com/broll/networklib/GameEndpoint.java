@@ -1,16 +1,17 @@
 package com.broll.networklib;
 
+import com.broll.networklib.network.INetworkDiscoveryRequest;
 import com.broll.networklib.network.NetworkRegistry;
-import com.broll.networklib.network.NetworkRequestAttempt;
+import com.broll.networklib.network.INetworkRequestAttempt;
 import com.broll.networklib.site.NetworkSite;
 import com.broll.networklib.site.SitesHandler;
 import com.esotericsoftware.kryo.Kryo;
 
 import java.util.Arrays;
 
-public abstract class GameEndpoint<T extends NetworkSite> {
+public abstract class GameEndpoint<T extends NetworkSite, C> {
 
-    protected SitesHandler<T> sites = new SitesHandler<>(type -> registerNetworkType(type));
+    protected SitesHandler<T,C> sites = new SitesHandler<>(type -> registerNetworkType(type));
 
     public GameEndpoint(){
     }
@@ -19,7 +20,7 @@ public abstract class GameEndpoint<T extends NetworkSite> {
         NetworkRegistry.register(getKryo(), packagePath);
     }
 
-    protected void registerNetworkType(Class type){
+    public void registerNetworkType(Class type){
         getKryo().register(type);
     }
 
@@ -34,7 +35,7 @@ public abstract class GameEndpoint<T extends NetworkSite> {
         });
     }
 
-    public static void attemptRequest(NetworkRequestAttempt request, Runnable attempt){
+    public static void attemptRequest(INetworkRequestAttempt request, Runnable attempt){
         try {
             attempt.run();
         }catch (Exception e){

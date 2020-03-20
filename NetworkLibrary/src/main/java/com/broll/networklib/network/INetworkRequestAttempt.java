@@ -1,6 +1,6 @@
 package com.broll.networklib.network;
 
-public interface NetworkRequestAttempt<T> extends NetworkRequest<T>{
+public interface INetworkRequestAttempt<T> extends INetworkRequest<T> {
 
     void failure(String reason);
 }

@@ -1,7 +1,8 @@
 package com.broll.networklib.network.nt;
 
-public class NT_LobbyJoin {
+public class NT_LobbyCreate {
     public String playerName;
-    public int lobbyId;
     public String authenticationKey;
+    public Object settings;
+    public String lobbyName;
 }

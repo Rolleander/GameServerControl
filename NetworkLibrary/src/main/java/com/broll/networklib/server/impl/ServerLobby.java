@@ -1,5 +1,8 @@
 package com.broll.networklib.server.impl;
 
+import com.broll.networklib.network.nt.NT_LobbyInformation;
+import com.broll.networklib.network.nt.NT_LobbyUpdate;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -10,6 +13,8 @@ public class ServerLobby<L, P> {
 
     private final static int NO_LIMIT = -1;
 
+    private LobbyHandler<L,P> lobbyHandler;
+
     private int id;
 
     private int playerLimit = NO_LIMIT;
@@ -18,14 +23,44 @@ public class ServerLobby<L, P> {
 
     private boolean locked = false;
 
+    private boolean hidden = false;
+
     private ServerLobbyListener listener;
 
     private String name;
 
     private L data;
 
-    ServerLobby(String name, int id) {
+    private Object settings;
+
+    ServerLobby(LobbyHandler<L,P> lobbyHandler,String name, int id) {
+        this.lobbyHandler =lobbyHandler;
+        this.name = name;
         this.id = id;
+    }
+
+    public void close(){
+        lobbyHandler.closeLobby(this);
+    }
+
+    public void kickPlayer(Player<P> player){
+        lobbyHandler.kickPlayer(this,player);
+    }
+
+    public void transferPlayer(Player<P> player, ServerLobby<L,P> toLobby){
+        lobbyHandler.transferPlayer(player, toLobby);
+    }
+
+    public void transferPlayers(ServerLobby<L,P> toLobby){
+        lobbyHandler.transferPlayers(this,toLobby);
+    }
+
+    public ServerLobby<L,P> openCopy(){
+        ServerLobby<L, P> lobby = lobbyHandler.openLobby(name, settings);
+        lobby.hidden = hidden;
+        lobby.playerLimit = playerLimit;
+        lobby.data = data;
+        return lobby;
     }
 
     public void sendToAllTCP(Object object) {
@@ -73,12 +108,16 @@ public class ServerLobby<L, P> {
         players.clear();
     }
 
-    public void lock() {
-        locked = true;
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
     }
 
-    public void unlock() {
-        locked = false;
+    public void setLocked(boolean locked) {
+        this.locked = locked;
+    }
+
+    public boolean isHidden() {
+        return hidden;
     }
 
     public boolean isFull() {
@@ -101,6 +140,27 @@ public class ServerLobby<L, P> {
             listener.playerLeft(this, player);
         }
     }
+
+    public void sendLobbyUpdate() {
+        NT_LobbyUpdate update = new NT_LobbyUpdate();
+        fillLobbyInfo(update);
+        sendToAllTCP(update);
+    }
+
+    private void fillLobbyInfo(NT_LobbyInformation info){
+        info.lobbyId = getId();
+        info.lobbyName = getName();
+        info.playerCount = getPlayerCount();
+        info.playerLimit = getPlayerLimit();
+        info.settings = getSettings();
+    }
+
+     NT_LobbyInformation getLobbyInfo() {
+        NT_LobbyInformation info = new NT_LobbyInformation();
+        fillLobbyInfo(info);
+        return info;
+    }
+
 
     public int getPlayerCount() {
         return players.size();
@@ -128,5 +188,17 @@ public class ServerLobby<L, P> {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    boolean isVisible() {
+        return !locked && !hidden;
+    }
+
+    public Object getSettings() {
+        return settings;
+    }
+
+    public void setSettings(Object settings) {
+        this.settings = settings;
     }
 }

@@ -6,5 +6,6 @@ public class NT_LobbyInformation {
     public int lobbyId;
     public int playerCount;
     public int playerLimit;
+    public Object settings;
 
 }

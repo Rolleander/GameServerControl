@@ -14,7 +14,7 @@ import java.net.InetAddress;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class GameClient extends GameEndpoint<ClientSite> {
+public class GameClient extends GameEndpoint<ClientSite, Object> {
 
     private final static int CONNECTION_TIMEOUT = 5000;
     private Client client = new Client();
@@ -80,7 +80,7 @@ public class GameClient extends GameEndpoint<ClientSite> {
 
         @Override
         public void received(Connection c, Object o) {
-            sites.pass(o, sites -> sites.forEach(site -> site.receive(o)));
+            sites.pass(null, o, sites -> sites.forEach(site -> site.receive(o)));
         }
     }
 }

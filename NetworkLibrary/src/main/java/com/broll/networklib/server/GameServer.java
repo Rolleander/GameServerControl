@@ -3,6 +3,7 @@ package com.broll.networklib.server;
 import com.broll.networklib.GameEndpoint;
 import com.broll.networklib.network.NetworkException;
 import com.broll.networklib.network.NetworkRegistry;
+import com.broll.networklib.site.SitesHandler;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
@@ -11,7 +12,7 @@ import com.esotericsoftware.minlog.Log;
 
 import java.io.IOException;
 
-public class GameServer extends GameEndpoint<ServerSite> {
+public class GameServer extends GameEndpoint<ServerSite, NetworkConnection> {
 
     private Server server = new Server() {
         @Override
@@ -21,6 +22,10 @@ public class GameServer extends GameEndpoint<ServerSite> {
     };
 
     public GameServer() {
+    }
+
+    void setSitesHandler(SitesHandler<ServerSite, NetworkConnection> handler) {
+        sites = handler;
     }
 
     public void open() {
@@ -39,11 +44,11 @@ public class GameServer extends GameEndpoint<ServerSite> {
         server.stop();
     }
 
-    public void sendToAllTCP(Object object){
+    public void sendToAllTCP(Object object) {
         server.sendToAllTCP(object);
     }
 
-    public void sendToAllUDP(Object object){
+    public void sendToAllUDP(Object object) {
         server.sendToAllUDP(object);
     }
 
@@ -70,7 +75,7 @@ public class GameServer extends GameEndpoint<ServerSite> {
         @Override
         public void received(Connection c, Object o) {
             NetworkConnection connection = (NetworkConnection) c;
-            sites.pass(o, sites -> sites.forEach(site -> site.receive(connection, o)));
+            sites.pass(connection, o, sites -> sites.forEach(site -> site.receive(connection, o)));
         }
     }
 

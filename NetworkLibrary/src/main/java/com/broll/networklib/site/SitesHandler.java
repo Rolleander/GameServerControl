@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SitesHandler<T extends NetworkSite> {
+public class SitesHandler<T extends NetworkSite, C> {
 
     private final TypeRegister typeRegister;
     private List<T> sites = new ArrayList<>();
@@ -43,16 +43,16 @@ public class SitesHandler<T extends NetworkSite> {
         return sites;
     }
 
-    public void pass(Object sentObject, ReceivingSites<T> receivingSites) {
+    public void pass(C connectionContext, Object sentObject, ReceivingSites<T> receivingSites) {
         ObjectTargetContainer route = siteRoutes.get(sentObject.getClass());
         if (route == null) {
             Log.error("No receiverMethod registered for network object " + sentObject);
             return;
         }
-        route.pass(sentObject, receivingSites);
+        route.pass(connectionContext, sentObject, receivingSites);
     }
 
-    private void registerRoute(Class type, T site, Method receiverMethod) {
+    protected void registerRoute(Class type, T site, Method receiverMethod) {
         ObjectTargetContainer route = siteRoutes.get(type);
         if (route == null) {
             route = new ObjectTargetContainer();
@@ -62,20 +62,20 @@ public class SitesHandler<T extends NetworkSite> {
         route.methods.put(site, receiverMethod);
     }
 
+    protected void invokeReceiver(C context, T site, Method receiver, Object object){
+        try {
+            receiver.invoke(site, object);
+        } catch (Exception e) {
+            Log.error("Failed to invoke receiver method "+receiver+" on site "+site,e);
+        }
+    }
+
     private class ObjectTargetContainer {
         private Map<T, Method> methods = new HashMap<>();
 
-        private void pass( Object sentObject, ReceivingSites<T> receivingSites) {
+        private void pass(C connectionContext, Object sentObject, ReceivingSites<T> receivingSites) {
             receivingSites.receivers(new ArrayList<>(methods.keySet()));
-            methods.forEach((site, method) -> pass( site, method, sentObject));
-        }
-
-        private void pass(T size, Method method, Object object) {
-            try {
-                method.invoke(size, object);
-            } catch (Exception e) {
-                Log.error("Failed to invoke receiver method "+method+" on site "+size,e);
-            }
+            methods.forEach((site, method) -> invokeReceiver( connectionContext,site, method, sentObject));
         }
     }
 

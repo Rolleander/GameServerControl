@@ -1,67 +1,74 @@
 package com.broll.networklib.server.impl;
 
 import com.broll.networklib.PackageReceiver;
+import com.broll.networklib.network.nt.NT_LobbyClosed;
+import com.broll.networklib.network.nt.NT_LobbyCreate;
 import com.broll.networklib.network.nt.NT_LobbyInformation;
 import com.broll.networklib.network.nt.NT_LobbyJoin;
-import com.broll.networklib.network.nt.NT_LobbyUnjoin;
+import com.broll.networklib.network.nt.NT_LobbyNoJoin;
+import com.broll.networklib.network.nt.NT_LobbyKicked;
 import com.broll.networklib.network.nt.NT_ServerInformation;
 import com.broll.networklib.server.LobbyServerSite;
 import com.broll.networklib.server.NetworkConnection;
+import com.broll.networklib.server.PackageRestriction;
+import com.broll.networklib.server.RestrictionType;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ConnectionSite<L,P> extends LobbyServerSite<L,P> {
+public class ConnectionSite<L, P> extends LobbyServerSite<L, P> {
 
     private AtomicInteger playerIdCounter = new AtomicInteger();
 
     private Map<String, Player> playerRegister = new ConcurrentHashMap<>();
 
-    public ConnectionSite(LobbyHandler<L,P> lobbyHandler) {
-        super(lobbyHandler);
+    private String serverName;
+
+    public ConnectionSite(String name) {
+        super();
+        this.serverName = name;
     }
 
+    @PackageRestriction(RestrictionType.NONE)
     @PackageReceiver
     public void receive(NT_ServerInformation serverInfo) {
-        //connection requested lobby information, send information about all lobbies that are not locked
-        serverInfo.lobbies = lobbyHandler.getLobbies().stream().filter(lobby-> !lobby.isLocked()).map(this::getLobbyInfo).toArray(NT_LobbyInformation[]::new);
+        serverInfo.serverName = serverName;
+        serverInfo.lobbies = lobbyHandler.getLobbies().stream().filter(ServerLobby::isVisible).map(ServerLobby::getLobbyInfo).toArray(NT_LobbyInformation[]::new);
         getConnection().sendTCP(serverInfo);
     }
 
+    @PackageRestriction(RestrictionType.NOT_IN_LOBBY)
     @PackageReceiver
-    public void receive(NT_LobbyJoin join) {
-        Player player = null;
-        boolean reconnected = false;
-        Player p = playerRegister.get(join.authenticationKey);
-        if (!p.getConnection().isActive()) {
-            //find existing player, for which the previous connection is inactive (prevent stealing when key is known)
-            player = p;
-            reconnected = true;
+    public void joinLobby(NT_LobbyJoin join) {
+        initPlayerAndJoinLobby(join.lobbyId, join.playerName, join.authenticationKey);
+    }
+
+    @PackageRestriction(RestrictionType.IN_LOBBY)
+    @PackageReceiver
+    public void switchLobby(NT_LobbyJoin join) {
+        ServerLobby from = getLobby();
+        if (from.isLocked()) {
+            getConnection().sendTCP(new NT_LobbyNoJoin());
+            return;
         }
-        if (player == null) {
-            //new player, key did not exist
-            player = new Player(playerIdCounter.getAndIncrement(),join.authenticationKey, getConnection());
+        if (initPlayerAndJoinLobby(join.lobbyId, join.playerName, join.authenticationKey)) {
+            //remove from previous lobby
+            from.removePlayer(getPlayer());
         }
-        player.setName(join.name);
-        getConnection().setPlayer(player);
-        int id = join.lobbyId;
-        ServerLobby lobby = lobbyHandler.getLobby(id);
-        boolean successfulJoin = false;
-        if (lobby != null) {
-            successfulJoin = lobby.addPlayer(player);
-            if(successfulJoin){
-                //put player in register
-                playerRegister.put(join.authenticationKey, player);
-                if(reconnected && player.getListener()!=null){
-                    player.getListener().reconnected(player);
-                }
-            }
+    }
+
+    @PackageReceiver
+    public void createLobby(NT_LobbyCreate create) {
+        boolean reconnected = initPlayerConnection(create.playerName, create.authenticationKey);
+        ServerLobby lobby = lobbyHandler.getLobbyCreationRequestHandler().createNewLobby(getPlayer(), create.lobbyName, create.settings);
+        if(lobby!=null){
+            joinLobby(lobby, reconnected, create.authenticationKey);
         }
-        if (!successfulJoin) {
-            //send unjoin to client so he doesnt wait forever
-            getConnection().sendTCP(new NT_LobbyUnjoin());
+        else{
+            //was not allowed to create lobby
+            getConnection().sendTCP(new NT_LobbyNoJoin());
         }
     }
 
@@ -70,7 +77,7 @@ public class ConnectionSite<L,P> extends LobbyServerSite<L,P> {
         Player player = connection.getPlayer();
         if (player != null) {
             player.updateOnlineStatus(false);
-            if(player.getListener()!=null){
+            if (player.getListener() != null) {
                 player.getListener().disconnected(player);
             }
             if (player.inLobby()) {
@@ -84,18 +91,60 @@ public class ConnectionSite<L,P> extends LobbyServerSite<L,P> {
         }
     }
 
-    private NT_LobbyInformation getLobbyInfo(ServerLobby lobby){
-        NT_LobbyInformation info = new NT_LobbyInformation();
-        info.lobbyId = lobby.getId();
-        info.lobbyName = lobby.getName();
-        info.playerCount = lobby.getPlayerCount();
-        info.playerLimit = lobby.getPlayerLimit();
-        return info;
+    private boolean initPlayerAndJoinLobby(int lobbyId, String playerName, String authenticationKey) {
+        boolean reconnected = initPlayerConnection(playerName, authenticationKey);
+        ServerLobby lobby = lobbyHandler.getLobby(lobbyId);
+        if (lobby != null) {
+           return joinLobby(lobby,reconnected, authenticationKey);
+        }
+        return false;
     }
 
-    public void closedLobby(ServerLobby lobby, List<Player> players) {
+    private boolean joinLobby(ServerLobby lobby, boolean reconnected, String authenticationKey){
+        Player player = getPlayer();
+        boolean successfulJoin = lobby.addPlayer(player);
+        if (successfulJoin) {
+            //put player in register
+            playerRegister.put(authenticationKey, player);
+            if (reconnected && player.getListener() != null) {
+                player.getListener().reconnected(player);
+            }
+            getLobby().sendLobbyUpdate();
+        }
+        else{
+            getConnection().sendTCP(new NT_LobbyNoJoin());
+        }
+        return successfulJoin;
+    }
+
+    private boolean initPlayerConnection(String playerName, String authenticationKey) {
+        Player player = null;
+        boolean reconnected = false;
+        Player p = playerRegister.get(authenticationKey);
+        if (!p.getConnection().isActive()) {
+            //find existing player, for which the previous connection is inactive (prevent stealing when key is known)
+            player = p;
+            reconnected = true;
+        }
+        if (player == null) {
+            //new player, key did not exist
+            player = new Player(playerIdCounter.getAndIncrement(), authenticationKey, getConnection());
+        }
+        player.updateOnlineStatus(true);
+        player.setName(playerName);
+        getConnection().setPlayer(player);
+        return reconnected;
+    }
+
+    public void closedLobby(ServerLobby lobby, List<Player<P>> players) {
         //remove players from register
-        players.forEach(player-> playerRegister.remove(player.getAuthenticationKey()));
+        players.forEach(player ->      playerRegister.remove(player.getAuthenticationKey()));
+        //send lobby closed to all player
+        lobby.sendToAllTCP(new NT_LobbyClosed());
     }
 
+    public void kickedPlayer(Player<P> player) {
+        playerRegister.remove(player.getAuthenticationKey());
+        player.sendTCP(new NT_LobbyKicked());
+    }
 }
