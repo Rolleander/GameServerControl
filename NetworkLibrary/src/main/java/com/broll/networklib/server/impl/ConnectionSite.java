@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ConnectionSite<L, P> extends LobbyServerSite<L, P> {
+public class ConnectionSite<L  extends LobbySettings, P  extends LobbySettings>   extends LobbyServerSite<L, P> {
 
     private AtomicInteger playerIdCounter = new AtomicInteger();
 
@@ -109,7 +109,7 @@ public class ConnectionSite<L, P> extends LobbyServerSite<L, P> {
             if (reconnected && player.getListener() != null) {
                 player.getListener().reconnected(player);
             }
-            getLobby().sendLobbyUpdate();
+            lobby.sendLobbyUpdate();
         }
         else{
             getConnection().sendTCP(new NT_LobbyNoJoin());
@@ -118,17 +118,15 @@ public class ConnectionSite<L, P> extends LobbyServerSite<L, P> {
     }
 
     private boolean initPlayerConnection(String playerName, String authenticationKey) {
-        Player player = null;
         boolean reconnected = false;
-        Player p = playerRegister.get(authenticationKey);
-        if (!p.getConnection().isActive()) {
-            //find existing player, for which the previous connection is inactive (prevent stealing when key is known)
-            player = p;
-            reconnected = true;
-        }
+        Player player = playerRegister.get(authenticationKey);
         if (player == null) {
             //new player, key did not exist
             player = new Player(playerIdCounter.getAndIncrement(), authenticationKey, getConnection());
+        }
+        else if (!player.getConnection().isActive()) {
+            //find existing player, for which the previous connection is inactive (prevent stealing when key is known)
+            reconnected = true;
         }
         player.updateOnlineStatus(true);
         player.setName(playerName);

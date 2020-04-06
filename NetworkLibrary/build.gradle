@@ -20,11 +20,14 @@ repositories {
 dependencies {
    // api 'com.broll.networklib'
     // https://mvnrepository.com/artifact/kryonet/kryonet-all
-    implementation group: 'kryonet', name: 'kryonet-all', version: '2.21'
+    compile group: 'kryonet', name: 'kryonet-all', version: '2.21'
 
     implementation("com.google.guava:guava:28.2-jre")
 
     implementation "com.dorkbox:Annotations:2.14"
+
+    // https://mvnrepository.com/artifact/commons-io/commons-io
+    compile group: 'commons-io', name: 'commons-io', version: '2.6'
 
     compile group: 'com.esotericsoftware.minlog', name: 'minlog', version: '1.2'
 

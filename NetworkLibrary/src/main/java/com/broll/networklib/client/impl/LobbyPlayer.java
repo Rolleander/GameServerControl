@@ -3,6 +3,7 @@ package com.broll.networklib.client.impl;
 public class LobbyPlayer {
 
     private String name;
+    private Object settings;
 
     void setName(String name) {
         this.name = name;
@@ -12,4 +13,11 @@ public class LobbyPlayer {
         return name;
     }
 
+    public Object getSettings() {
+        return settings;
+    }
+
+    public void setSettings(Object settings) {
+        this.settings = settings;
+    }
 }

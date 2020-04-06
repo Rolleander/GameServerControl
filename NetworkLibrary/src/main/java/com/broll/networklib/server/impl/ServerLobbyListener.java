@@ -1,9 +1,9 @@
 package com.broll.networklib.server.impl;
 
-public interface ServerLobbyListener {
+public interface ServerLobbyListener<L  extends LobbySettings,P  extends LobbySettings> {
 
-    void playerJoined(ServerLobby lobby,Player player);
+    void playerJoined(ServerLobby<L,P> lobby,Player<P>  player);
 
-    void playerLeft(ServerLobby lobby, Player player);
+    void playerLeft(ServerLobby<L,P> lobby, Player<P> player);
 
 }

@@ -6,10 +6,10 @@ import com.broll.networklib.network.INetworkRequestAttempt;
 import com.broll.networklib.site.NetworkSite;
 import com.broll.networklib.site.SitesHandler;
 import com.esotericsoftware.kryo.Kryo;
-
+import java.util.List;
 import java.util.Arrays;
 
-public abstract class GameEndpoint<T extends NetworkSite, C> {
+public abstract class GameEndpoint<T extends NetworkSite, C> implements  NetworkRegister{
 
     protected SitesHandler<T,C> sites = new SitesHandler<>(type -> registerNetworkType(type));
 
@@ -33,6 +33,14 @@ public abstract class GameEndpoint<T extends NetworkSite, C> {
             this.sites.add(site);
             site.init(this);
         });
+    }
+
+    public void unregister(T... sites){
+        Arrays.asList(sites).forEach(site -> this.sites.remove(site));
+    }
+
+    public List<T> getRegisteredSites(){
+        return this.sites.getSites();
     }
 
     public static void attemptRequest(INetworkRequestAttempt request, Runnable attempt){

@@ -42,8 +42,7 @@ public class TestServer {
     public static class TestSite extends LobbyServerSite<LobbyData, PlayerData>{
 
         public void trest(){
-            lobbyHandler.openLobby("");
-            lobbyHandler.
+
         }
     }
 }

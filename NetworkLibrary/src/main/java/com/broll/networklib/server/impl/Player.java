@@ -3,7 +3,7 @@ package com.broll.networklib.server.impl;
 
 import com.broll.networklib.server.NetworkConnection;
 
-public class Player<P> {
+public class Player<P extends LobbySettings> {
 
     private String name;
     private final int id;
@@ -14,7 +14,7 @@ public class Player<P> {
     private PlayerListener listener;
     private P data;
 
-    public Player(int id,String authenticationKey, NetworkConnection connection) {
+    public Player(int id, String authenticationKey, NetworkConnection connection) {
         this.id = id;
         this.authenticationKey = authenticationKey;
         this.connection = connection;
@@ -28,11 +28,11 @@ public class Player<P> {
         return data;
     }
 
-    public void sendTCP(Object object){
+    public void sendTCP(Object object) {
         connection.sendTCP(object);
     }
 
-    public void sendUDP(Object object){
+    public void sendUDP(Object object) {
         connection.sendUDP(object);
     }
 
@@ -44,16 +44,16 @@ public class Player<P> {
         return listener;
     }
 
-    void setLobby(ServerLobby lobby){
+    void setLobby(ServerLobby lobby) {
         this.serverLobby = serverLobby;
     }
 
-     String getAuthenticationKey() {
+    String getAuthenticationKey() {
         return authenticationKey;
     }
 
-    public boolean inLobby(){
-        return serverLobby!=null;
+    public boolean inLobby() {
+        return serverLobby != null;
     }
 
     public ServerLobby getServerLobby() {
@@ -83,5 +83,11 @@ public class Player<P> {
     public NetworkConnection getConnection() {
         return connection;
     }
+
+    public Object getSettings() {
+        if (data == null) {return null;}
+        return data.getSettings();
+    }
+
 }
 

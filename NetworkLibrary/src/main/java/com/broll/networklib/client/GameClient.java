@@ -80,7 +80,11 @@ public class GameClient extends GameEndpoint<ClientSite, Object> {
 
         @Override
         public void received(Connection c, Object o) {
-            sites.pass(null, o, sites -> sites.forEach(site -> site.receive(o)));
+            GameClient.this.received(o);
         }
+    }
+
+    protected void received(Object o){
+        sites.pass(null, o, sites -> sites.forEach(site -> site.receive(o)));
     }
 }

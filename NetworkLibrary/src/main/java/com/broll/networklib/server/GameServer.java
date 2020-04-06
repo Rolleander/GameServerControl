@@ -75,8 +75,12 @@ public class GameServer extends GameEndpoint<ServerSite, NetworkConnection> {
         @Override
         public void received(Connection c, Object o) {
             NetworkConnection connection = (NetworkConnection) c;
-            sites.pass(connection, o, sites -> sites.forEach(site -> site.receive(connection, o)));
+            GameServer.this.received(connection, o);
         }
+    }
+
+    protected void received(NetworkConnection connection, Object o) {
+        sites.pass(connection, o, sites -> sites.forEach(site -> site.receive(connection, o)));
     }
 
 }

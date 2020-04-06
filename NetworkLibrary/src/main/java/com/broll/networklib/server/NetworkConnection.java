@@ -24,4 +24,5 @@ public class NetworkConnection extends Connection {
     public boolean isActive() {
         return active;
     }
+
 }

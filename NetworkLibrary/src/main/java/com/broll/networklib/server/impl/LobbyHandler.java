@@ -9,12 +9,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class LobbyHandler<L, P> {
+public class LobbyHandler<L  extends LobbySettings, P extends LobbySettings> {
 
-    private AtomicInteger idCounter;
+    private AtomicInteger idCounter = new AtomicInteger();
     private Map<Integer, ServerLobby<L,P>> lobbies = new ConcurrentHashMap<>();
     private LobbyCloseListener listener;
-    private ILobbyCreationRequest<L,P> lobbyCreationRequestHandler = (player, lobbyName, settings)->this.openLobby(lobbyName, settings);
+    private ILobbyCreationRequest<L,P> lobbyCreationRequestHandler = (player, lobbyName, settings)->this.openLobby(lobbyName);
 
     public LobbyHandler(LobbyCloseListener listener) {
         this.listener = listener;
@@ -28,10 +28,9 @@ public class LobbyHandler<L, P> {
         return lobbyCreationRequestHandler;
     }
 
-    public ServerLobby<L,P> openLobby(String name, Object settings) {
+    public ServerLobby<L,P> openLobby(String name) {
         int id = idCounter.getAndIncrement();
         ServerLobby lobby = new ServerLobby(this, name, id);
-        lobby.setSettings(settings);
         lobbies.put(id, lobby);
         return lobby;
     }

@@ -149,6 +149,7 @@ public class LobbyConnectionSite extends ClientSite {
 
     private void updatePlayer(LobbyPlayer player, NT_LobbyPlayerInfo info) {
         player.setName(info.name);
+        player.setSettings(info.settings);
     }
 
     private void playerJoined(NT_LobbyPlayerInfo playerInfo) {

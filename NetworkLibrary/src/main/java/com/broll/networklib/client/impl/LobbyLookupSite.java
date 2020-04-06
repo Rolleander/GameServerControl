@@ -34,8 +34,8 @@ public class LobbyLookupSite extends ClientSite {
 
     public static CompletableFuture<Integer> openLobbyLookupClient(String ip, ILobbyDiscovery lobbyDiscovery) {
         LobbyLookupSite lookupSite = new LobbyLookupSite(lobbyDiscovery);
+        GameClient lookupClient = new GameClient();
         try {
-            GameClient lookupClient = new GameClient();
             lookupClient.register(lookupSite);
             lookupClient.connect(ip);
             //request server info
@@ -45,7 +45,16 @@ public class LobbyLookupSite extends ClientSite {
             Log.error("Failed to open lobby lookup client on ip " + ip);
             lookupSite.discoveryFuture.complete(0);
         }
-        return lookupSite.discoveryFuture;
+        return lookupSite.discoveryFuture.whenComplete((r, t) -> lookupClient.shutdown());
+    }
+
+    public static CompletableFuture<Integer> lookupLobbies(GameClient client, ILobbyDiscovery lobbyDiscovery) {
+        LobbyLookupSite lookupSite = new LobbyLookupSite(lobbyDiscovery);
+        client.register(lookupSite);
+        //request server info
+        client.sendTCP(new NT_ServerInformation());
+        lookupSite.scheduleTimeout();
+        return lookupSite.discoveryFuture.whenComplete((r, t) -> client.unregister(lookupSite));
     }
 
     private void scheduleTimeout() {
@@ -63,7 +72,7 @@ public class LobbyLookupSite extends ClientSite {
     public void receive(NT_ServerInformation info) {
         discoveryFuture.complete(info.lobbies.length);
         String ip = getClient().getConnectedIp();
-        List<GameLobby> lobbies = Arrays.stream(info.lobbies).map(lobbyInfo->{
+        List<GameLobby> lobbies = Arrays.stream(info.lobbies).map(lobbyInfo -> {
             GameLobby lobby = new GameLobby();
             lobby.setServerIp(ip);
             updateLobbyInfo(lobby, lobbyInfo);

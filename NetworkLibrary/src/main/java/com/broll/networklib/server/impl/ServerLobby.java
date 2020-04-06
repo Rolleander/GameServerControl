@@ -1,19 +1,20 @@
 package com.broll.networklib.server.impl;
 
 import com.broll.networklib.network.nt.NT_LobbyInformation;
+import com.broll.networklib.network.nt.NT_LobbyPlayerInfo;
 import com.broll.networklib.network.nt.NT_LobbyUpdate;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
-public class ServerLobby<L, P> {
+public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
 
     private final static int NO_LIMIT = -1;
 
-    private LobbyHandler<L,P> lobbyHandler;
+    private LobbyHandler<L, P> lobbyHandler;
 
     private int id;
 
@@ -33,30 +34,30 @@ public class ServerLobby<L, P> {
 
     private Object settings;
 
-    ServerLobby(LobbyHandler<L,P> lobbyHandler,String name, int id) {
-        this.lobbyHandler =lobbyHandler;
+    ServerLobby(LobbyHandler<L, P> lobbyHandler, String name, int id) {
+        this.lobbyHandler = lobbyHandler;
         this.name = name;
         this.id = id;
     }
 
-    public void close(){
+    public void close() {
         lobbyHandler.closeLobby(this);
     }
 
-    public void kickPlayer(Player<P> player){
-        lobbyHandler.kickPlayer(this,player);
+    public void kickPlayer(Player<P> player) {
+        lobbyHandler.kickPlayer(this, player);
     }
 
-    public void transferPlayer(Player<P> player, ServerLobby<L,P> toLobby){
+    public void transferPlayer(Player<P> player, ServerLobby<L, P> toLobby) {
         lobbyHandler.transferPlayer(player, toLobby);
     }
 
-    public void transferPlayers(ServerLobby<L,P> toLobby){
-        lobbyHandler.transferPlayers(this,toLobby);
+    public void transferPlayers(ServerLobby<L, P> toLobby) {
+        lobbyHandler.transferPlayers(this, toLobby);
     }
 
-    public ServerLobby<L,P> openCopy(){
-        ServerLobby<L, P> lobby = lobbyHandler.openLobby(name, settings);
+    public ServerLobby<L, P> openCopy() {
+        ServerLobby<L, P> lobby = lobbyHandler.openLobby(name);
         lobby.hidden = hidden;
         lobby.playerLimit = playerLimit;
         lobby.data = data;
@@ -81,6 +82,10 @@ public class ServerLobby<L, P> {
 
     public void setListener(ServerLobbyListener listener) {
         this.listener = listener;
+    }
+
+    public synchronized void synchronizedAccess(Runnable runnable){
+        runnable.run();
     }
 
     synchronized boolean addPlayer(Player<P> player) {
@@ -144,10 +149,19 @@ public class ServerLobby<L, P> {
     public void sendLobbyUpdate() {
         NT_LobbyUpdate update = new NT_LobbyUpdate();
         fillLobbyInfo(update);
+        update.players = getPlayers().stream().map(this::createPlayerInfo).toArray(NT_LobbyPlayerInfo[]::new);
         sendToAllTCP(update);
     }
 
-    private void fillLobbyInfo(NT_LobbyInformation info){
+    private NT_LobbyPlayerInfo createPlayerInfo(Player player) {
+        NT_LobbyPlayerInfo info = new NT_LobbyPlayerInfo();
+        info.id = player.getId();
+        info.name = player.getName();
+        info.settings = player.getSettings();
+        return info;
+    }
+
+    private void fillLobbyInfo(NT_LobbyInformation info) {
         info.lobbyId = getId();
         info.lobbyName = getName();
         info.playerCount = getPlayerCount();
@@ -155,7 +169,7 @@ public class ServerLobby<L, P> {
         info.settings = getSettings();
     }
 
-     NT_LobbyInformation getLobbyInfo() {
+    NT_LobbyInformation getLobbyInfo() {
         NT_LobbyInformation info = new NT_LobbyInformation();
         fillLobbyInfo(info);
         return info;
@@ -172,6 +186,10 @@ public class ServerLobby<L, P> {
 
     public Collection<Player<P>> getPlayers() {
         return Collections.unmodifiableCollection(players);
+    }
+
+    public Stream<P> streamData() {
+        return getPlayers().stream().map(Player::getData);
     }
 
     public int getId() {
@@ -195,10 +213,10 @@ public class ServerLobby<L, P> {
     }
 
     public Object getSettings() {
-        return settings;
+        if (data == null) {
+            return null;
+        }
+        return data.getSettings();
     }
 
-    public void setSettings(Object settings) {
-        this.settings = settings;
-    }
 }

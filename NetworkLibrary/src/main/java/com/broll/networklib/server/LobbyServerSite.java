@@ -1,12 +1,11 @@
 package com.broll.networklib.server;
 
-import com.broll.networklib.server.ServerSite;
 import com.broll.networklib.server.impl.LobbyHandler;
 import com.broll.networklib.server.impl.Player;
+import com.broll.networklib.server.impl.LobbySettings;
 import com.broll.networklib.server.impl.ServerLobby;
-import com.esotericsoftware.kryonet.Server;
 
-public abstract class LobbyServerSite<L, P> extends ServerSite {
+public abstract class LobbyServerSite<L  extends LobbySettings, P extends LobbySettings> extends ServerSite {
 
     protected LobbyHandler<L, P> lobbyHandler;
 

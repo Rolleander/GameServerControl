@@ -1,4 +1,4 @@
-package com.broll.networklib.server;
+package com.broll.networklib.network;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
