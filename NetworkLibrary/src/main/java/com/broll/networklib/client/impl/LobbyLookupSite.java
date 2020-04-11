@@ -4,6 +4,7 @@ import com.broll.networklib.PackageReceiver;
 import com.broll.networklib.client.ClientSite;
 import com.broll.networklib.client.GameClient;
 import com.broll.networklib.network.INetworkRequest;
+import com.broll.networklib.network.IRegisterNetwork;
 import com.broll.networklib.network.NetworkException;
 import com.broll.networklib.network.nt.NT_LobbyInformation;
 import com.broll.networklib.network.nt.NT_ServerInformation;
@@ -32,20 +33,21 @@ public class LobbyLookupSite extends ClientSite {
         this.discoveryFuture = new CompletableFuture<>();
     }
 
-    public static CompletableFuture<Integer> openLobbyLookupClient(String ip, ILobbyDiscovery lobbyDiscovery) {
+    public static CompletableFuture<Integer> openLobbyLookupClient(String ip, IRegisterNetwork registerNetwork, ILobbyDiscovery lobbyDiscovery) {
         LobbyLookupSite lookupSite = new LobbyLookupSite(lobbyDiscovery);
-        GameClient lookupClient = new GameClient();
+        GameClient lookupClient = new GameClient(registerNetwork);
         try {
             lookupClient.register(lookupSite);
             lookupClient.connect(ip);
             //request server info
+            Log.info("connectd to " + lookupClient.getConnectedIp());
             lookupClient.sendTCP(new NT_ServerInformation());
             lookupSite.scheduleTimeout();
         } catch (Exception e) {
             Log.error("Failed to open lobby lookup client on ip " + ip);
             lookupSite.discoveryFuture.complete(0);
         }
-        return lookupSite.discoveryFuture.whenComplete((r, t) -> lookupClient.shutdown());
+       return lookupSite.discoveryFuture.whenComplete((r, t) -> lookupClient.shutdown());
     }
 
     public static CompletableFuture<Integer> lookupLobbies(GameClient client, ILobbyDiscovery lobbyDiscovery) {
@@ -61,6 +63,7 @@ public class LobbyLookupSite extends ClientSite {
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
         executor.schedule(() -> {
                     if (!discoveryFuture.isDone()) {
+                        Log.warn("Lobby discovery timed out on server " + this.getClient().getConnectedIp());
                         discoveryFuture.complete(0);
                     }
                 }
@@ -68,9 +71,16 @@ public class LobbyLookupSite extends ClientSite {
         executor.shutdown();
     }
 
+    @Override
+    public void onDisconnect() {
+        if (!discoveryFuture.isDone()) {
+            Log.warn("Lobby discovery client disconnected");
+            discoveryFuture.complete(0);
+        }
+    }
+
     @PackageReceiver
     public void receive(NT_ServerInformation info) {
-        discoveryFuture.complete(info.lobbies.length);
         String ip = getClient().getConnectedIp();
         List<GameLobby> lobbies = Arrays.stream(info.lobbies).map(lobbyInfo -> {
             GameLobby lobby = new GameLobby();
@@ -79,7 +89,7 @@ public class LobbyLookupSite extends ClientSite {
             return lobby;
         }).collect(Collectors.toList());
         lobbyDiscovery.discovered(ip, info.serverName, lobbies);
-        client.shutdown();
+        discoveryFuture.complete(info.lobbies.length);
     }
 
     public static void updateLobbyInfo(GameLobby lobby, NT_LobbyInformation lobbyInfo) {
@@ -87,5 +97,6 @@ public class LobbyLookupSite extends ClientSite {
         lobby.setLobbyId(lobbyInfo.lobbyId);
         lobby.setPlayerCount(lobbyInfo.playerCount);
         lobby.setPlayerLimit(lobbyInfo.playerLimit);
+        lobby.setSettings(lobbyInfo.settings);
     }
 }

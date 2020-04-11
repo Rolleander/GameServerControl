@@ -1,6 +1,5 @@
 package com.broll.networklib.server.impl;
 
-
 import com.broll.networklib.server.NetworkConnection;
 
 public class Player<P extends LobbySettings> {

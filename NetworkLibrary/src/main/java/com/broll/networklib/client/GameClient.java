@@ -1,6 +1,7 @@
 package com.broll.networklib.client;
 
 import com.broll.networklib.GameEndpoint;
+import com.broll.networklib.network.IRegisterNetwork;
 import com.broll.networklib.network.NetworkException;
 import com.broll.networklib.network.NetworkRegistry;
 import com.esotericsoftware.kryo.Kryo;
@@ -12,6 +13,8 @@ import com.esotericsoftware.minlog.Log;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 public class GameClient extends GameEndpoint<ClientSite, Object> {
@@ -20,22 +23,26 @@ public class GameClient extends GameEndpoint<ClientSite, Object> {
     private Client client = new Client();
     private String connectedIp;
 
+    public GameClient(IRegisterNetwork registerNetwork) {
+        super(registerNetwork);
+        init();
+    }
+
     public void connect(String ip) {
-        if(isConnected()){
+        if (isConnected()) {
             shutdown();
         }
         try {
-            client.addListener(new ClientListener());
-            init();
+            client.addListener(new Listener.ThreadedListener(new ClientListener()));
             client.start();
             client.connect(CONNECTION_TIMEOUT, ip, NetworkRegistry.TCP_PORT, NetworkRegistry.UDP_PORT);
-            Log.info("Client connected to server "+ip);
+            Log.info("Client connected to server " + ip);
         } catch (IOException e) {
-            throw new NetworkException("Failed to open to server", e);
+            throw new NetworkException("Failed to connect with server " + ip, e);
         }
     }
 
-    public List<String> discoverServers(){
+    public List<String> discoverServers() {
         return client.discoverHosts(NetworkRegistry.TCP_PORT, NetworkRegistry.UDP_PORT).stream().map(InetAddress::toString).collect(Collectors.toList());
     }
 
@@ -49,15 +56,16 @@ public class GameClient extends GameEndpoint<ClientSite, Object> {
     }
 
     @Override
-    protected Kryo getKryo() {
+    public Kryo getKryo() {
         return client.getKryo();
     }
 
-    public void sendTCP(Object object){
+    public void sendTCP(Object object) {
+        Log.info("Client send " + object);
         client.sendTCP(object);
     }
 
-    public void sendUDP(Object object){
+    public void sendUDP(Object object) {
         client.sendUDP(object);
     }
 
@@ -68,13 +76,13 @@ public class GameClient extends GameEndpoint<ClientSite, Object> {
     private class ClientListener extends Listener {
         @Override
         public void connected(Connection c) {
-            connectedIp = c.getRemoteAddressTCP().getAddress().toString();
-            sites.getSites().forEach(site -> site.onConnect());
+            connectedIp = c.getRemoteAddressTCP().getHostName();
+            passAllSites(sites -> sites.forEach(site -> site.onConnect()));
         }
 
         @Override
         public void disconnected(Connection c) {
-            sites.getSites().forEach(site -> site.onDisconnect());
+            passAllSites(sites -> sites.forEach(site -> site.onDisconnect()));
             connectedIp = null;
         }
 
@@ -84,7 +92,8 @@ public class GameClient extends GameEndpoint<ClientSite, Object> {
         }
     }
 
-    protected void received(Object o){
-        sites.pass(null, o, sites -> sites.forEach(site -> site.receive(o)));
+    protected void received(Object o) {
+        Log.info("Client received " + o);
+        passReceived(null, o, sites -> sites.forEach(site -> site.receive(o)));
     }
 }

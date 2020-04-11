@@ -2,6 +2,7 @@ package com.broll.networklib.server;
 
 import com.broll.networklib.server.impl.Player;
 import com.esotericsoftware.kryonet.Connection;
+import com.esotericsoftware.minlog.Log;
 
 public class NetworkConnection extends Connection {
 
@@ -25,4 +26,9 @@ public class NetworkConnection extends Connection {
         return active;
     }
 
+    @Override
+    public int sendTCP(Object o) {
+        Log.info("Server send "+o+" to "+this);
+        return super.sendTCP(o);
+    }
 }

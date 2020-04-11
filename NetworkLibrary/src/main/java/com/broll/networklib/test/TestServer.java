@@ -1,5 +1,6 @@
 package com.broll.networklib.test;
 
+import com.broll.networklib.network.IRegisterNetwork;
 import com.broll.networklib.server.GameServer;
 import com.broll.networklib.server.NetworkConnection;
 import com.esotericsoftware.kryonet.Connection;
@@ -15,7 +16,8 @@ public class TestServer extends GameServer {
     private List<ReceivedPackage> received = new ArrayList<>();
     private int timeout;
 
-    public TestServer(int timeout) {
+    public TestServer(IRegisterNetwork registerNetwork,int timeout) {
+        super(registerNetwork);
         this.timeout = timeout;
     }
 

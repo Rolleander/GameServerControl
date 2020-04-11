@@ -27,6 +27,8 @@ public class GameLobby {
 
     private LobbyUpdateListener lobbyUpdateListener;
 
+    private Object settings;
+
     public GameLobby() {
     }
 
@@ -82,6 +84,10 @@ public class GameLobby {
         this.playerJoined = playerJoined;
     }
 
+    void setSettings(Object settings) {
+        this.settings = settings;
+    }
+
     public boolean isPlayerJoined() {
         return playerJoined;
     }
@@ -108,5 +114,9 @@ public class GameLobby {
 
     public String getName() {
         return name;
+    }
+
+    public Object getSettings() {
+        return settings;
     }
 }

@@ -5,7 +5,6 @@ import com.broll.networklib.server.impl.Player;
 import com.broll.networklib.server.impl.LobbySettings;
 import com.broll.networklib.server.impl.ServerLobby;
 import com.broll.networklib.site.SitesHandler;
-import com.broll.networklib.site.TypeRegister;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -17,8 +16,7 @@ public class LobbyServerSitesHandler<L  extends LobbySettings,P  extends LobbySe
 
     private LobbyHandler<L,P> lobbyHandler;
 
-    public LobbyServerSitesHandler(LobbyHandler<L,P> lobbyHandler, TypeRegister typeRegister) {
-        super(typeRegister);
+    public LobbyServerSitesHandler(LobbyHandler<L,P> lobbyHandler) {
         this.lobbyHandler = lobbyHandler;
     }
 

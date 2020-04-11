@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.broll.networklib.client.GameClient;
+import com.broll.networklib.network.IRegisterNetwork;
 import com.google.common.util.concurrent.SettableFuture;
 
 public class TestClient extends GameClient {
@@ -13,7 +14,8 @@ public class TestClient extends GameClient {
     private int timeout;
     private boolean connected = false;
 
-    public TestClient(int timeout) {
+    public TestClient(IRegisterNetwork registerNetwork,int timeout) {
+        super(registerNetwork);
         this.timeout = timeout;
     }
 

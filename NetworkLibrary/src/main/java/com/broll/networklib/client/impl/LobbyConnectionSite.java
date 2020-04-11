@@ -29,7 +29,7 @@ public class LobbyConnectionSite extends ClientSite {
 
     }
 
-    private void initRequest(INetworkRequestAttempt<GameLobby> request, GameLobby lobby){
+    private void initRequest(INetworkRequestAttempt<GameLobby> request, GameLobby lobby) {
         this.lobby = lobby;
         this.request = request;
         this.players = new HashMap<>();
@@ -44,8 +44,8 @@ public class LobbyConnectionSite extends ClientSite {
         client.sendTCP(join);
     }
 
-    public void tryCreateLobby(String playerName, Object settings, ClientAuthenticationKey secret, INetworkRequestAttempt<GameLobby> request){
-        initRequest(request,null);
+    public void tryCreateLobby(String playerName, Object settings, ClientAuthenticationKey secret, INetworkRequestAttempt<GameLobby> request) {
+        initRequest(request, null);
         NT_LobbyCreate create = new NT_LobbyCreate();
         create.playerName = playerName;
         create.authenticationKey = secret.getSecret();
@@ -53,10 +53,14 @@ public class LobbyConnectionSite extends ClientSite {
         client.sendTCP(create);
     }
 
+    public void reconnectedToLobby(GameLobby lobby) {
+        this.lobby = lobby;
+    }
+
     @PackageReceiver
     public void receive(NT_LobbyUpdate lobbyUpdate) {
         //player could join lobby / create lobby / lobby update
-        if(request!=null){
+        if (request != null) {
             if (lobby == null) {
                 //player created lobby, so create client object
                 lobby = new GameLobby();
@@ -94,8 +98,8 @@ public class LobbyConnectionSite extends ClientSite {
     @PackageReceiver
     public void receive(NT_LobbyKicked kicked) {
         //player was removed
-        if(lobby!=null && lobby.getLobbyUpdateListener()!=null){
-           lobby.getLobbyUpdateListener().kickedFromLobby();
+        if (lobby != null && lobby.getLobbyUpdateListener() != null) {
+            lobby.getLobbyUpdateListener().kickedFromLobby();
         }
         resetLobby();
     }
@@ -113,13 +117,17 @@ public class LobbyConnectionSite extends ClientSite {
     @PackageReceiver
     public void receive(NT_LobbyClosed closed) {
         //lobby was closed
-        if(lobby!=null && lobby.getLobbyUpdateListener()!=null){
+        if (lobby != null && lobby.getLobbyUpdateListener() != null) {
             lobby.getLobbyUpdateListener().closed();
         }
         resetLobby();
     }
 
-    private void resetLobby(){
+    public void newLobby(NT_LobbyUpdate update) {
+
+    }
+
+    private void resetLobby() {
         lobby = null;
         players.clear();
     }

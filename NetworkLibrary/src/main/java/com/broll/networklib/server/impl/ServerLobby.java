@@ -84,7 +84,7 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
         this.listener = listener;
     }
 
-    public synchronized void synchronizedAccess(Runnable runnable){
+    public synchronized void synchronizedAccess(Runnable runnable) {
         runnable.run();
     }
 
@@ -148,9 +148,13 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
 
     public void sendLobbyUpdate() {
         NT_LobbyUpdate update = new NT_LobbyUpdate();
+        fillLobbyUpdate(update);
+        sendToAllTCP(update);
+    }
+
+    void fillLobbyUpdate(NT_LobbyUpdate update) {
         fillLobbyInfo(update);
         update.players = getPlayers().stream().map(this::createPlayerInfo).toArray(NT_LobbyPlayerInfo[]::new);
-        sendToAllTCP(update);
     }
 
     private NT_LobbyPlayerInfo createPlayerInfo(Player player) {
@@ -161,7 +165,7 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
         return info;
     }
 
-    private void fillLobbyInfo(NT_LobbyInformation info) {
+    void fillLobbyInfo(NT_LobbyInformation info) {
         info.lobbyId = getId();
         info.lobbyName = getName();
         info.playerCount = getPlayerCount();
