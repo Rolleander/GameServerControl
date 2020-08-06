@@ -40,7 +40,6 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
         NT_ServerInformation serverInfo = new NT_ServerInformation();
         serverInfo.serverName = serverName;
         serverInfo.lobbies = lobbyHandler.getLobbies().stream().filter(ServerLobby::isVisible).map(ServerLobby::getLobbyInfo).toArray(NT_LobbyInformation[]::new);
-        Log.info("settings " + serverInfo.lobbies[0].settings);
         getConnection().sendTCP(serverInfo);
     }
 
@@ -62,7 +61,7 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
             NT_Reconnected reconnected = new NT_Reconnected();
             lobby.fillLobbyUpdate(reconnected);
             reconnected.playerName = player.getName();
-            reconnectedPlayer(player, key);
+            reconnectedPlayer(player);
             getConnection().sendTCP(reconnected);
         } else {
             //is a new player, cant be reconnected
@@ -82,13 +81,15 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
             //already in the lobby, just init player
             boolean reconnect = initPlayerConnection(join.playerName, join.authenticationKey);
             if (reconnect) {
-                reconnectedPlayer(getPlayer(), join.authenticationKey);
+                reconnectedPlayer(getPlayer());
             }
+            from.sendLobbyUpdate();
             return;
         }
         if (initPlayerAndJoinLobby(join.lobbyId, join.playerName, join.authenticationKey)) {
             //remove from previous lobby
             from.removePlayer(getPlayer());
+            from.checkAutoClose();
         }
     }
 
@@ -97,7 +98,7 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
         boolean reconnected = initPlayerConnection(create.playerName, create.authenticationKey);
         ServerLobby lobby = lobbyHandler.getLobbyCreationRequestHandler().createNewLobby(getPlayer(), create.lobbyName, create.settings);
         if (lobby != null) {
-            joinLobby(lobby, reconnected, create.authenticationKey);
+            joinLobby(lobby, reconnected);
         } else {
             //was not allowed to create lobby
             getConnection().sendTCP(new NT_LobbyNoJoin());
@@ -118,6 +119,7 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
                     //remove from lobby and register
                     playerRegister.remove(player.getAuthenticationKey());
                     lobby.removePlayer(player);
+                    lobby.checkAutoClose();
                 }
             }
         }
@@ -127,17 +129,17 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
         boolean reconnected = initPlayerConnection(playerName, authenticationKey);
         ServerLobby lobby = lobbyHandler.getLobby(lobbyId);
         if (lobby != null) {
-            return joinLobby(lobby, reconnected, authenticationKey);
+            return joinLobby(lobby, reconnected);
         }
         return false;
     }
 
-    private boolean joinLobby(ServerLobby lobby, boolean reconnected, String authenticationKey) {
+    private boolean joinLobby(ServerLobby lobby, boolean reconnected) {
         Player player = getPlayer();
         boolean successfulJoin = lobby.addPlayer(player);
         if (successfulJoin) {
             if (reconnected) {
-                reconnectedPlayer(player, authenticationKey);
+                reconnectedPlayer(player);
             }
             lobby.sendLobbyUpdate();
         } else {
@@ -146,9 +148,7 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
         return successfulJoin;
     }
 
-    private void reconnectedPlayer(Player player, String authenticationKey) {
-        //put player in register
-        playerRegister.put(authenticationKey, player);
+    private void reconnectedPlayer(Player player) {
         getConnection().setPlayer(player);
         if (!player.isOnline()) {
             player.updateOnlineStatus(true);
@@ -164,6 +164,8 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
         if (player == null) {
             //new player, key did not exist
             player = new Player(playerIdCounter.getAndIncrement(), authenticationKey, getConnection());
+            //put player in register
+            playerRegister.put(authenticationKey, player);
         } else if (!player.getConnection().isActive()) {
             //find existing player, for which the previous connection is inactive (prevent stealing when key is known)
             reconnected = true;

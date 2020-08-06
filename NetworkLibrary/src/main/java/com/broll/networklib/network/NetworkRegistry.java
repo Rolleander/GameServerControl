@@ -42,7 +42,7 @@ public final class NetworkRegistry {
             ClassPath cp = ClassPath.from(NetworkRegistry.class.getClassLoader());
             cp.getTopLevelClasses(packagePath).forEach(clazz -> {
                 Class<?> loadedClass = clazz.load();
-                Log.info("Register " + loadedClass);
+                Log.trace("Register " + loadedClass);
                 kryo.register(loadedClass);
             });
         } catch (IOException e) {

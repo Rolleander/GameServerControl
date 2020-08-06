@@ -17,6 +17,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 public class SitesHandler<T extends NetworkSite, C> {
 
@@ -100,7 +101,7 @@ public class SitesHandler<T extends NetworkSite, C> {
         methods.add(receiverMethod);
     }
 
-    protected void invokeReceiver(C context, T site, Method receiver, Object object) {
+    private void invokeReceiver(C context, T site, Method receiver, Object object) {
         try {
             receiver.invoke(site, object);
         } catch (Exception e) {
@@ -108,15 +109,20 @@ public class SitesHandler<T extends NetworkSite, C> {
         }
     }
 
+    protected boolean shouldInvokeReceiver(C context, T site, Method receiver, Object object) {
+        return true;
+    }
 
     private class ObjectTargetContainer {
         private Map<T, List<Method>> sites = new HashMap<>();
 
         private void pass(C connectionContext, Object sentObject) {
-            sites.forEach((site, methods) -> methods.forEach(method ->
-                    invokeReceiver(connectionContext, site, method, sentObject)));
+            sites.forEach((site, methods) ->
+                    //have to be filtered and collected first, so all conditions are checked first before any method is actually called
+                    methods.stream().filter(method -> shouldInvokeReceiver(connectionContext, site, method, sentObject)).collect(Collectors.toList()).stream()
+                            .forEach(method ->
+                                    invokeReceiver(connectionContext, site, method, sentObject)));
         }
-
     }
 
 }

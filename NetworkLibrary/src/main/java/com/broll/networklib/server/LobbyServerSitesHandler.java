@@ -32,14 +32,8 @@ public class LobbyServerSitesHandler<L  extends LobbySettings,P  extends LobbySe
     }
 
     @Override
-    protected void invokeReceiver(NetworkConnection connection, ServerSite site, Method receiver, Object object) {
+    protected boolean shouldInvokeReceiver(NetworkConnection connection, ServerSite site, Method receiver, Object object) {
         RestrictionType restrictionType = receiverRestrictions.get(receiver);
-        if(shouldInvokeReceiver(connection, restrictionType)) {
-            super.invokeReceiver(connection, site, receiver, object);
-        }
-    }
-
-    private boolean shouldInvokeReceiver(NetworkConnection connection, RestrictionType restrictionType){
         if(restrictionType == RestrictionType.NONE){
             return true;
         }
@@ -58,4 +52,5 @@ public class LobbyServerSitesHandler<L  extends LobbySettings,P  extends LobbySe
         }
         return false;
     }
+
 }

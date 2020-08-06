@@ -1,5 +1,8 @@
 package com.broll.networklib.server.impl;
 
+import com.broll.networklib.network.nt.NT_LobbyKicked;
+import com.esotericsoftware.minlog.Log;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -30,8 +33,9 @@ public class LobbyHandler<L  extends LobbySettings, P extends LobbySettings> {
 
     public ServerLobby<L,P> openLobby(String name) {
         int id = idCounter.getAndIncrement();
-        ServerLobby lobby = new ServerLobby(this, name, id);
+        ServerLobby lobby = new ServerLobby(this, name, id, listener);
         lobbies.put(id, lobby);
+        Log.info("Server opened lobby ["+id+"]: "+name);
         return lobby;
     }
 
@@ -46,16 +50,19 @@ public class LobbyHandler<L  extends LobbySettings, P extends LobbySettings> {
     }
 
     public void closeLobby(ServerLobby<L, P> lobby) {
-        lobby.close(listener);
+        lobby.remove();
         lobbies.remove(lobby.getId());
+        //send lobby close for remaining players
+        NT_LobbyKicked lobbyKicked = new NT_LobbyKicked();
+        lobbyKicked.reason = NT_LobbyKicked.REASON_LOBBY_CLOSED;
+        lobby.sendToAllTCP(lobbyKicked);
+        Log.info("Server closed lobby ["+lobby.getId()+"]: "+lobby.getName());
     }
 
     public void kickPlayer(ServerLobby<L, P> lobby, Player<P> player){
         lobby.removePlayer(player);
         listener.kickedPlayer(player);
-        if(lobby.getPlayerCount()==0){
-            closeLobby(lobby);
-        }
+        lobby.checkAutoClose();
     }
 
     public List<Player> transferPlayers(ServerLobby<L, P> from, ServerLobby<L, P> to) {
@@ -73,9 +80,7 @@ public class LobbyHandler<L  extends LobbySettings, P extends LobbySettings> {
         if (toLobby.addPlayer(player)) {
             if (fromLobby != null) {
                 fromLobby.removePlayer(player);
-                if(fromLobby.getPlayerCount()==0){
-                    closeLobby(fromLobby);
-                }
+                fromLobby.checkAutoClose();
             }
             if(player.getListener()!=null){
                 player.getListener().switchedLobby(player, fromLobby, toLobby);

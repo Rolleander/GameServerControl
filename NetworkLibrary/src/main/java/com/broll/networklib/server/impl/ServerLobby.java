@@ -3,11 +3,13 @@ package com.broll.networklib.server.impl;
 import com.broll.networklib.network.nt.NT_LobbyInformation;
 import com.broll.networklib.network.nt.NT_LobbyPlayerInfo;
 import com.broll.networklib.network.nt.NT_LobbyUpdate;
+import com.esotericsoftware.minlog.Log;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
@@ -26,18 +28,23 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
 
     private boolean hidden = false;
 
+    private boolean closed = false;
+
+    private boolean autoClose = true;
+
     private ServerLobbyListener listener;
+
+    private LobbyCloseListener<L,P> closeListener;
 
     private String name;
 
     private L data;
 
-    private Object settings;
-
-    ServerLobby(LobbyHandler<L, P> lobbyHandler, String name, int id) {
+    ServerLobby(LobbyHandler<L, P> lobbyHandler, String name, int id, LobbyCloseListener<L,P> closeListener) {
         this.lobbyHandler = lobbyHandler;
         this.name = name;
         this.id = id;
+        this.closeListener = closeListener;
     }
 
     public void close() {
@@ -89,11 +96,17 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
     }
 
     synchronized boolean addPlayer(Player<P> player) {
-        if (isFull() || locked) {
+        if (isFull() || locked || closed) {
+            Log.warn("Lobby update [" + id + "] " + name + " | Can not add player " + player.getName() + ", lobby is full or locked!");
+            return false;
+        }
+        if (players.contains(player)) {
+            Log.warn("Lobby update [" + id + "] " + name + " | Player " + player.getName() + " has already joined lobby!");
             return false;
         }
         players.add(player);
         player.setLobby(this);
+        Log.info("Lobby update [" + id + "] " + name + " | Player " + player.getName() + " joined!");
         if (player.getListener() != null) {
             player.getListener().joinedLobby(player, this);
         }
@@ -107,10 +120,22 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
         this.playerLimit = playerLimit;
     }
 
-    synchronized void close(LobbyCloseListener listener) {
+    void checkAutoClose(){
+        if(autoClose && !closed && getPlayers().isEmpty()){
+            close();
+        }
+    }
+
+    synchronized void remove() {
+        closed = true;
+        locked = true;
+        hidden = true;
         players.forEach(player -> player.setLobby(null));
-        listener.closed(this, players);
+        closeListener.closed(this, players);
         players.clear();
+        if (listener != null) {
+            listener.lobbyClosed(this);
+        }
     }
 
     public void setHidden(boolean hidden) {
@@ -138,6 +163,7 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
             player.setLobby(null);
         }
         players.remove(player);
+        Log.info("Lobby update [" + id + "] " + name + " | Player " + player.getName() + " left.");
         if (player.getListener() != null) {
             player.getListener().leftLobby(player, this);
         }
@@ -179,7 +205,6 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
         return info;
     }
 
-
     public int getPlayerCount() {
         return players.size();
     }
@@ -190,6 +215,10 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
 
     public Collection<Player<P>> getPlayers() {
         return Collections.unmodifiableCollection(players);
+    }
+
+    public Player<P> getPlayer(int id) {
+        return players.stream().filter(player -> player.getId() == id).findFirst().orElse(null);
     }
 
     public Stream<P> streamData() {
@@ -214,6 +243,18 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
 
     boolean isVisible() {
         return !locked && !hidden;
+    }
+
+    public boolean isClosed() {
+        return closed;
+    }
+
+    public void setAutoClose(boolean autoClose) {
+        this.autoClose = autoClose;
+    }
+
+    public boolean isAutoClose() {
+        return autoClose;
     }
 
     public Object getSettings() {

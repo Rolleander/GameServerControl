@@ -36,7 +36,7 @@ public abstract class GameEndpoint<T extends NetworkSite, C> implements NetworkR
     }
 
     public void registerNetworkType(Class type) {
-        Log.info("Register " + type);
+        Log.trace("Register " + type);
         getKryo().register(type);
     }
 

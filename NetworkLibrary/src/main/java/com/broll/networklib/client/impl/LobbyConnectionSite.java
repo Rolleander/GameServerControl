@@ -123,10 +123,6 @@ public class LobbyConnectionSite extends ClientSite {
         resetLobby();
     }
 
-    public void newLobby(NT_LobbyUpdate update) {
-
-    }
-
     private void resetLobby() {
         lobby = null;
         players.clear();

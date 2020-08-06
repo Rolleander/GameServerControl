@@ -44,7 +44,7 @@ public class Player<P extends LobbySettings> {
     }
 
     void setLobby(ServerLobby lobby) {
-        this.serverLobby = serverLobby;
+        this.serverLobby = lobby;
     }
 
     String getAuthenticationKey() {
