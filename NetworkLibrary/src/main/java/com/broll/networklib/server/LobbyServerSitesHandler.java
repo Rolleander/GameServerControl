@@ -20,6 +20,8 @@ public class LobbyServerSitesHandler<L  extends LobbySettings,P  extends LobbySe
         this.lobbyHandler = lobbyHandler;
     }
 
+
+
     @Override
     protected void registerRoute(Class type, ServerSite site, Method receiverMethod) {
         super.registerRoute(type, site, receiverMethod);

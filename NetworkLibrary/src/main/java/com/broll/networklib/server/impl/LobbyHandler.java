@@ -1,6 +1,7 @@
 package com.broll.networklib.server.impl;
 
 import com.broll.networklib.network.nt.NT_LobbyKicked;
+import com.broll.networklib.server.LobbyServerSitesHandler;
 import com.esotericsoftware.minlog.Log;
 
 import java.util.ArrayList;
@@ -9,18 +10,26 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class LobbyHandler<L  extends LobbySettings, P extends LobbySettings> {
+public class LobbyHandler<L extends LobbySettings, P extends LobbySettings> {
 
     private AtomicInteger idCounter = new AtomicInteger();
-    private Map<Integer, ServerLobby<L,P>> lobbies = new ConcurrentHashMap<>();
+    private Map<Integer, ServerLobby<L, P>> lobbies = new ConcurrentHashMap<>();
     private LobbyCloseListener listener;
-    private ILobbyCreationRequest<L,P> lobbyCreationRequestHandler = (player, lobbyName, settings)->this.openLobby(lobbyName);
+    private ILobbyCreationRequest<L, P> lobbyCreationRequestHandler = (player, lobbyName, settings) -> this.openLobby(lobbyName);
+    private PlayerRegister playerRegister;
+    private LobbyServerSitesHandler sitesHandler = new LobbyServerSitesHandler(this);
 
-    public LobbyHandler(LobbyCloseListener listener) {
+    public LobbyHandler(LobbyCloseListener listener, PlayerRegister playerRegister) {
         this.listener = listener;
+        this.playerRegister = playerRegister;
+    }
+
+    public LobbyServerSitesHandler getSitesHandler() {
+        return sitesHandler;
     }
 
     public void setLobbyCreationRequestHandler(ILobbyCreationRequest<L, P> lobbyCreationRequestHandler) {
@@ -31,11 +40,11 @@ public class LobbyHandler<L  extends LobbySettings, P extends LobbySettings> {
         return lobbyCreationRequestHandler;
     }
 
-    public ServerLobby<L,P> openLobby(String name) {
+    public ServerLobby<L, P> openLobby(String name) {
         int id = idCounter.getAndIncrement();
         ServerLobby lobby = new ServerLobby(this, name, id, listener);
         lobbies.put(id, lobby);
-        Log.info("Server opened lobby ["+id+"]: "+name);
+        Log.info("Server opened lobby [" + id + "]: " + name);
         return lobby;
     }
 
@@ -56,10 +65,10 @@ public class LobbyHandler<L  extends LobbySettings, P extends LobbySettings> {
         NT_LobbyKicked lobbyKicked = new NT_LobbyKicked();
         lobbyKicked.reason = NT_LobbyKicked.REASON_LOBBY_CLOSED;
         lobby.sendToAllTCP(lobbyKicked);
-        Log.info("Server closed lobby ["+lobby.getId()+"]: "+lobby.getName());
+        Log.info("Server closed lobby [" + lobby.getId() + "]: " + lobby.getName());
     }
 
-    public void kickPlayer(ServerLobby<L, P> lobby, Player<P> player){
+    public void kickPlayer(ServerLobby<L, P> lobby, Player<P> player) {
         lobby.removePlayer(player);
         listener.kickedPlayer(player);
         lobby.checkAutoClose();
@@ -77,17 +86,36 @@ public class LobbyHandler<L  extends LobbySettings, P extends LobbySettings> {
 
     public boolean transferPlayer(Player player, ServerLobby<L, P> toLobby) {
         ServerLobby fromLobby = player.getServerLobby();
-        if (toLobby.addPlayer(player)) {
-            if (fromLobby != null) {
-                fromLobby.removePlayer(player);
-                fromLobby.checkAutoClose();
+        if (fromLobby != null) {
+            if (fromLobby.isLocked() || toLobby.isLocked()) {
+                return false;
             }
-            if(player.getListener()!=null){
-                player.getListener().switchedLobby(player, fromLobby, toLobby);
+            if (toLobby.addPlayer(player)) {
+                if (fromLobby != null) {
+                    fromLobby.removePlayer(player);
+                    fromLobby.checkAutoClose();
+                }
+                if (player.getListener() != null) {
+                    player.getListener().switchedLobby(player, fromLobby, toLobby);
+                }
+                return true;
             }
-            return true;
         }
         return false;
+    }
+
+    public Optional<BotPlayer<P>> createBot(ServerLobby<L, P> lobby, String name, P playerSettings) {
+        BotConnection botConnection = new BotConnection();
+        botConnection.init(new BotEndpoint(sitesHandler, botConnection));
+        BotPlayer<P> bot = new BotPlayer<>(playerRegister.registerPlayerId(), botConnection);
+        bot.setName(name);
+        botConnection.setPlayer(bot);
+        bot.setData(playerSettings);
+        if (lobby.addPlayer(bot)) {
+            playerRegister.register(bot.getAuthenticationKey(), bot);
+            return Optional.of(bot);
+        }
+        return Optional.empty();
     }
 
     public ServerLobby<L, P> getLobby(int id) {

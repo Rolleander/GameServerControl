@@ -23,15 +23,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> extends LobbyServerSite<L, P> {
 
-    private AtomicInteger playerIdCounter = new AtomicInteger();
-
-    private Map<String, Player> playerRegister = new ConcurrentHashMap<>();
-
+    private PlayerRegister playerRegister;
     private String serverName;
 
-    public ConnectionSite(String name) {
+    public ConnectionSite(String name, PlayerRegister playerRegister) {
         super();
         this.serverName = name;
+        this.playerRegister = playerRegister;
     }
 
     @PackageRestriction(RestrictionType.NONE)
@@ -53,7 +51,7 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
     @PackageReceiver
     public void reconnectCheck(NT_ReconnectCheck check) {
         String key = check.authenticationKey;
-        Player player = playerRegister.get(key);
+        Player player = playerRegister.getPlayer(key);
         //player exists, has an inactive connection and is party of a lobby
         if (player != null && !player.getConnection().isActive() && player.getServerLobby() != null) {
             //reconnect player
@@ -117,7 +115,7 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
                 ServerLobby lobby = player.getServerLobby();
                 if (!lobby.isLocked()) {
                     //remove from lobby and register
-                    playerRegister.remove(player.getAuthenticationKey());
+                    playerRegister.unregister(player.getAuthenticationKey());
                     lobby.removePlayer(player);
                     lobby.checkAutoClose();
                 }
@@ -160,12 +158,12 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
 
     private boolean initPlayerConnection(String playerName, String authenticationKey) {
         boolean reconnected = false;
-        Player player = playerRegister.get(authenticationKey);
+        Player player = playerRegister.getPlayer(authenticationKey);
         if (player == null) {
             //new player, key did not exist
-            player = new Player(playerIdCounter.getAndIncrement(), authenticationKey, getConnection());
+            player = new Player(playerRegister.registerPlayerId(), authenticationKey, getConnection());
             //put player in register
-            playerRegister.put(authenticationKey, player);
+            playerRegister.register(authenticationKey, player);
         } else if (!player.getConnection().isActive()) {
             //find existing player, for which the previous connection is inactive (prevent stealing when key is known)
             reconnected = true;
@@ -177,13 +175,13 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
 
     public void closedLobby(ServerLobby lobby, List<Player<P>> players) {
         //remove players from register
-        players.forEach(player -> playerRegister.remove(player.getAuthenticationKey()));
+        players.forEach(player -> playerRegister.unregister(player.getAuthenticationKey()));
         //send lobby closed to all player
         lobby.sendToAllTCP(new NT_LobbyClosed());
     }
 
     public void kickedPlayer(Player<P> player) {
-        playerRegister.remove(player.getAuthenticationKey());
+        playerRegister.unregister(player.getAuthenticationKey());
         player.sendTCP(new NT_LobbyKicked());
     }
 }

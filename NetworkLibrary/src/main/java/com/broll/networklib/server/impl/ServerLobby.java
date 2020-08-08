@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
@@ -34,13 +35,13 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
 
     private ServerLobbyListener listener;
 
-    private LobbyCloseListener<L,P> closeListener;
+    private LobbyCloseListener<L, P> closeListener;
 
     private String name;
 
     private L data;
 
-    ServerLobby(LobbyHandler<L, P> lobbyHandler, String name, int id, LobbyCloseListener<L,P> closeListener) {
+    ServerLobby(LobbyHandler<L, P> lobbyHandler, String name, int id, LobbyCloseListener<L, P> closeListener) {
         this.lobbyHandler = lobbyHandler;
         this.name = name;
         this.id = id;
@@ -55,12 +56,12 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
         lobbyHandler.kickPlayer(this, player);
     }
 
-    public void transferPlayer(Player<P> player, ServerLobby<L, P> toLobby) {
-        lobbyHandler.transferPlayer(player, toLobby);
+    public boolean transferPlayer(Player<P> player, ServerLobby<L, P> toLobby) {
+        return lobbyHandler.transferPlayer(player, toLobby);
     }
 
-    public void transferPlayers(ServerLobby<L, P> toLobby) {
-        lobbyHandler.transferPlayers(this, toLobby);
+    public List<Player> transferPlayers(ServerLobby<L, P> toLobby) {
+        return lobbyHandler.transferPlayers(this, toLobby);
     }
 
     public ServerLobby<L, P> openCopy() {
@@ -120,8 +121,20 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
         this.playerLimit = playerLimit;
     }
 
-    void checkAutoClose(){
-        if(autoClose && !closed && getPlayers().isEmpty()){
+    public Collection<BotPlayer<P>> getBots() {
+        return getPlayers().stream().filter(player -> player instanceof BotPlayer).map(player -> (BotPlayer<P>) player).collect(Collectors.toList());
+    }
+
+    public Optional<BotPlayer<P>> createBot(String name, P playerSettings) {
+        return lobbyHandler.createBot(this, name, playerSettings);
+    }
+
+    private boolean hasRealPlayers() {
+        return getPlayers().stream().filter(player -> !(player instanceof BotPlayer)).findAny().isPresent();
+    }
+
+    void checkAutoClose() {
+        if (autoClose && !closed && !hasRealPlayers()) {
             close();
         }
     }

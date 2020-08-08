@@ -9,6 +9,7 @@ import com.broll.networklib.server.impl.LobbyHandler;
 import com.broll.networklib.server.impl.LobbySite;
 import com.broll.networklib.server.impl.Player;
 import com.broll.networklib.server.impl.LobbySettings;
+import com.broll.networklib.server.impl.PlayerRegister;
 import com.broll.networklib.server.impl.ServerLobby;
 import com.esotericsoftware.kryo.Kryo;
 
@@ -27,6 +28,8 @@ public class LobbyGameServer<L extends LobbySettings, P extends LobbySettings> i
 
     public LobbyGameServer(GameServer server, String name) {
         this.server = server;
+        PlayerRegister playerRegister = new PlayerRegister();
+        connectionSite = new ConnectionSite(name, playerRegister);
         lobbyHandler = new LobbyHandler<>(new LobbyCloseListener<L, P>() {
             @Override
             public void closed(ServerLobby<L, P> lobby, List<Player<P>> players) {
@@ -37,9 +40,8 @@ public class LobbyGameServer<L extends LobbySettings, P extends LobbySettings> i
             public void kickedPlayer(Player<P> player) {
                 connectionSite.kickedPlayer(player);
             }
-        });
-        server.setSitesHandler(new LobbyServerSitesHandler<>(lobbyHandler));
-        connectionSite = new ConnectionSite(name);
+        }, playerRegister);
+        server.setSitesHandler(lobbyHandler.getSitesHandler());
         register(connectionSite);
         register(new LobbySite());
     }
@@ -49,7 +51,7 @@ public class LobbyGameServer<L extends LobbySettings, P extends LobbySettings> i
         return server.getKryo();
     }
 
-    public LobbyServerCLI initCLI(){
+    public LobbyServerCLI initCLI() {
         return new LobbyServerCLI(this);
     }
 
