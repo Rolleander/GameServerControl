@@ -8,26 +8,33 @@ import com.esotericsoftware.minlog.Log;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 public class SitesHandler<T extends NetworkSite, C> {
 
+    private final static UnknownMessageReceiver DEFAULT_UNKNOWN_MESSAGE_RECEIVER = (message) -> {
+        Log.error("No receiverMethod registered for network object " + message);
+    };
+
     private List<T> sites = new ArrayList<>();
+
+    private UnknownMessageReceiver unknownMessageReceiver = DEFAULT_UNKNOWN_MESSAGE_RECEIVER;
 
     private Map<Class, ObjectTargetContainer> siteRoutes = new HashMap<>();
 
     private final ReadWriteLock siteModificationLock = new ReentrantReadWriteLock();
 
     public SitesHandler() {
+    }
+
+    public void setUnknownMessageReceiver(UnknownMessageReceiver unknownMessageReceiver) {
+        this.unknownMessageReceiver = unknownMessageReceiver;
     }
 
     public void add(T site) {
@@ -78,7 +85,7 @@ public class SitesHandler<T extends NetworkSite, C> {
         if (route == null) {
             if (sentObject instanceof FrameworkMessage.KeepAlive) {
             } else {
-                Log.error("No receiverMethod registered for network object " + sentObject);
+                unknownMessageReceiver.unknownMessage(sentObject);
             }
             return;
         }

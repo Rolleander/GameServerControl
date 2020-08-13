@@ -5,5 +5,6 @@ public class NT_LobbyPlayerInfo {
     public int id;
     public String name;
     public Object settings;
+    public boolean bot;
 
 }

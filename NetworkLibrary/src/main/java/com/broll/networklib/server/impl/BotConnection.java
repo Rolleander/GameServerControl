@@ -12,6 +12,11 @@ public class BotConnection<P extends LobbySettings> extends NetworkConnection {
     private BotEndpoint endpoint;
 
     public BotConnection() {
+        sites.setUnknownMessageReceiver(this::receivedUnknownMessage);
+    }
+
+    private void receivedUnknownMessage(Object message) {
+        //bots should not show errors for unhandled network messages
     }
 
     public void init(BotEndpoint endpoint) {

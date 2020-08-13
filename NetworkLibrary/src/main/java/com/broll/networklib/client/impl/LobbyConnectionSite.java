@@ -66,16 +66,16 @@ public class LobbyConnectionSite extends ClientSite {
                 lobby = new GameLobby();
                 lobby.setServerIp(getClient().getConnectedIp());
             }
-            //update lobby info
-            LobbyLookupSite.updateLobbyInfo(lobby, lobbyUpdate);
-            updateLobbyPlayers(lobbyUpdate.players);
-            if (!lobby.isPlayerJoined()) {
-                joinLobby();
-            }
-            LobbyUpdateListener listener = lobby.getLobbyUpdateListener();
-            if (listener != null) {
-                listener.lobbyUpdated();
-            }
+        }
+        if (!lobby.isPlayerJoined()) {
+            joinLobby();
+        }
+        //update lobby info
+        LobbyLookupSite.updateLobbyInfo(lobby, lobbyUpdate);
+        updateLobbyPlayers(lobbyUpdate.players);
+        LobbyUpdateListener listener = lobby.getLobbyUpdateListener();
+        if (listener != null) {
+            listener.lobbyUpdated();
         }
     }
 

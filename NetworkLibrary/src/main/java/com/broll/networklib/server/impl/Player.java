@@ -1,5 +1,6 @@
 package com.broll.networklib.server.impl;
 
+import com.broll.networklib.network.nt.NT_LobbyPlayerInfo;
 import com.broll.networklib.server.NetworkConnection;
 
 public class Player<P extends LobbySettings> {
@@ -86,6 +87,14 @@ public class Player<P extends LobbySettings> {
     public Object getSettings() {
         if (data == null) {return null;}
         return data.getSettings();
+    }
+
+     NT_LobbyPlayerInfo nt() {
+        NT_LobbyPlayerInfo info = new NT_LobbyPlayerInfo();
+        info.id = getId();
+        info.name = getName();
+        info.settings = getSettings();
+        return info;
     }
 
 }

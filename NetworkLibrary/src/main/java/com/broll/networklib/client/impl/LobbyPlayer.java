@@ -5,6 +5,10 @@ public class LobbyPlayer {
     private String name;
     private Object settings;
 
+    LobbyPlayer(){
+        super();
+    }
+
     void setName(String name) {
         this.name = name;
     }

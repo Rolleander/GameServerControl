@@ -1,5 +1,7 @@
 package com.broll.networklib.server.impl;
 
+import com.broll.networklib.network.nt.NT_LobbyPlayerInfo;
+
 public class BotPlayer<P extends LobbySettings> extends Player<P> {
 
     private final static String KEY_PREFIX = "BOT_";
@@ -20,4 +22,10 @@ public class BotPlayer<P extends LobbySettings> extends Player<P> {
         getBotConnection().unregister(sites);
     }
 
+    @Override
+    NT_LobbyPlayerInfo nt() {
+        NT_LobbyPlayerInfo info = super.nt();
+        info.bot = true;
+        return info;
+    }
 }

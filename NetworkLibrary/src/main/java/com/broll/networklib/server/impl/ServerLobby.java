@@ -193,15 +193,7 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
 
     void fillLobbyUpdate(NT_LobbyUpdate update) {
         fillLobbyInfo(update);
-        update.players = getPlayers().stream().map(this::createPlayerInfo).toArray(NT_LobbyPlayerInfo[]::new);
-    }
-
-    private NT_LobbyPlayerInfo createPlayerInfo(Player player) {
-        NT_LobbyPlayerInfo info = new NT_LobbyPlayerInfo();
-        info.id = player.getId();
-        info.name = player.getName();
-        info.settings = player.getSettings();
-        return info;
+        update.players = getPlayers().stream().map(Player::nt).toArray(NT_LobbyPlayerInfo[]::new);
     }
 
     void fillLobbyInfo(NT_LobbyInformation info) {
