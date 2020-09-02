@@ -3,6 +3,7 @@ package com.broll.networklib.client;
 import com.broll.networklib.GameEndpoint;
 import com.broll.networklib.NetworkRegister;
 import com.broll.networklib.client.impl.GameLobby;
+import com.broll.networklib.client.impl.ILobbyConnectionListener;
 import com.broll.networklib.client.impl.ILobbyDiscovery;
 import com.broll.networklib.client.impl.ILobbyReconnect;
 import com.broll.networklib.client.impl.LobbyConnectionSite;
@@ -15,6 +16,7 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.minlog.Log;
 import com.google.common.util.concurrent.SettableFuture;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -28,9 +30,20 @@ public class LobbyGameClient implements NetworkRegister {
 
     private ExecutorService discoveryExecutor;
     private GameClient client;
-    private LobbyConnectionSite lobbyConnectionSite = new LobbyConnectionSite();
+    private LobbyConnectionSite lobbyConnectionSite = new LobbyConnectionSite(new ILobbyConnectionListener() {
+        @Override
+        public void lobbyJoined(GameLobby lobby) {
+            connectedLobby = lobby;
+        }
+
+        @Override
+        public void leftLobby() {
+            connectedLobby = null;
+        }
+    });
     private ClientAuthenticationKey clientAuthenticationKey = ClientAuthenticationKey.fromFileCache();
     private boolean discoveringLobbies = false;
+    private GameLobby connectedLobby;
 
     public LobbyGameClient(IRegisterNetwork registerNetwork) {
         this(new GameClient(registerNetwork));
@@ -65,8 +78,9 @@ public class LobbyGameClient implements NetworkRegister {
         client.registerNetworkType(type);
     }
 
-    public void register(ClientSite... sites) {
+    public void register(LobbyClientSite... sites) {
         client.register(sites);
+        Arrays.stream(sites).forEach(site -> site.init(this));
     }
 
     public Future<Integer> discoverLobbies(ILobbyDiscovery lobbyDiscovery) {
@@ -146,7 +160,7 @@ public class LobbyGameClient implements NetworkRegister {
     public Future<Boolean> checkForReconnection(String ip, ILobbyReconnect reconnect) {
         return discoveryTask(false, () -> {
             try {
-                return LobbyReconnectSite.checkForReconnect(ip, client.getRegisterNetwork(), clientAuthenticationKey, lobby -> {
+                return LobbyReconnectSite.checkForReconnect(ip, client, clientAuthenticationKey, lobby -> {
                     connectToServer(ip);
                     lobbyConnectionSite.reconnectedToLobby(lobby);
                     reconnect.reconnected(lobby);
@@ -158,7 +172,7 @@ public class LobbyGameClient implements NetworkRegister {
         });
     }
 
-    private <T> Future<T> discoveryTask(boolean clientMustBeConnected, Supplier<T> task) {
+    private synchronized <T> Future<T> discoveryTask(boolean clientMustBeConnected, Supplier<T> task) {
         if (discoveringLobbies) {
             Log.error("Client ist already busy with a discovery task");
             return CompletableFuture.completedFuture(null);
@@ -177,6 +191,14 @@ public class LobbyGameClient implements NetworkRegister {
         GameEndpoint.attemptRequest(request, () -> {
             lobbyConnectionSite.tryCreateLobby(playerName, settings, ClientAuthenticationKey.fromFileCache(), request);
         });
+    }
+
+    public GameLobby getConnectedLobby() {
+        return connectedLobby;
+    }
+
+    public boolean isInLobby() {
+        return connectedLobby != null;
     }
 
     public void shutdown() {

@@ -3,11 +3,14 @@ package com.broll.networklib.client.impl;
 import com.broll.networklib.PackageReceiver;
 import com.broll.networklib.client.ClientAuthenticationKey;
 import com.broll.networklib.client.ClientSite;
+import com.broll.networklib.client.LobbyClientSite;
+import com.broll.networklib.client.LobbyGameClient;
 import com.broll.networklib.network.INetworkRequestAttempt;
 import com.broll.networklib.network.nt.NT_ChatMessage;
 import com.broll.networklib.network.nt.NT_LobbyClosed;
 import com.broll.networklib.network.nt.NT_LobbyCreate;
 import com.broll.networklib.network.nt.NT_LobbyJoin;
+import com.broll.networklib.network.nt.NT_LobbyJoined;
 import com.broll.networklib.network.nt.NT_LobbyNoJoin;
 import com.broll.networklib.network.nt.NT_LobbyPlayerInfo;
 import com.broll.networklib.network.nt.NT_LobbyUpdate;
@@ -19,14 +22,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class LobbyConnectionSite extends ClientSite {
+public class LobbyConnectionSite extends LobbyClientSite {
 
     private INetworkRequestAttempt<GameLobby> request;
     private GameLobby lobby;
     private Map<Integer, LobbyPlayer> players;
+    private ILobbyConnectionListener lobbyConnectionListener;
 
-    public LobbyConnectionSite() {
-
+    public LobbyConnectionSite(ILobbyConnectionListener lobbyConnectionListener) {
+        this.lobbyConnectionListener = lobbyConnectionListener;
     }
 
     private void initRequest(INetworkRequestAttempt<GameLobby> request, GameLobby lobby) {
@@ -58,7 +62,7 @@ public class LobbyConnectionSite extends ClientSite {
     }
 
     @PackageReceiver
-    public void receive(NT_LobbyUpdate lobbyUpdate) {
+    public void receive(NT_LobbyJoined lobbyJoin) {
         //player could join lobby / create lobby / lobby update
         if (request != null) {
             if (lobby == null) {
@@ -68,8 +72,14 @@ public class LobbyConnectionSite extends ClientSite {
             }
         }
         if (!lobby.isPlayerJoined()) {
-            joinLobby();
+            joinLobby(lobbyJoin.playerId);
         }
+        //update lobby info
+        receive((NT_LobbyUpdate) lobbyJoin);
+    }
+
+    @PackageReceiver
+    public void receive(NT_LobbyUpdate lobbyUpdate) {
         //update lobby info
         LobbyLookupSite.updateLobbyInfo(lobby, lobbyUpdate);
         updateLobbyPlayers(lobbyUpdate.players);
@@ -124,13 +134,15 @@ public class LobbyConnectionSite extends ClientSite {
     }
 
     private void resetLobby() {
+        lobbyConnectionListener.leftLobby();
         lobby = null;
         players.clear();
     }
 
-    private void joinLobby() {
+    private void joinLobby(int playerId) {
+        lobbyConnectionListener.lobbyJoined(lobby);
         players.clear();
-        lobby.setPlayerJoined(true);
+        lobby.playerJoined(playerId);
         lobby.setPlayers(players);
         //first update joins the player, so forward to request
         request.receive(lobby);
@@ -154,10 +166,11 @@ public class LobbyConnectionSite extends ClientSite {
     private void updatePlayer(LobbyPlayer player, NT_LobbyPlayerInfo info) {
         player.setName(info.name);
         player.setSettings(info.settings);
+        player.setBot(info.bot);
     }
 
     private void playerJoined(NT_LobbyPlayerInfo playerInfo) {
-        LobbyPlayer player = new LobbyPlayer();
+        LobbyPlayer player = new LobbyPlayer(playerInfo.id, lobby);
         updatePlayer(player, playerInfo);
         players.put(playerInfo.id, player);
         LobbyUpdateListener listener = lobby.getLobbyUpdateListener();

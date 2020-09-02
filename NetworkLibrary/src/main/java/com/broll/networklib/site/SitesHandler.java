@@ -5,6 +5,8 @@ import com.broll.networklib.network.AnnotationScanner;
 import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.minlog.Log;
 
+import org.apache.commons.collections4.map.MultiValueMap;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
@@ -50,7 +52,7 @@ public class SitesHandler<T extends NetworkSite, C> {
         Iterator<Map.Entry<Class, ObjectTargetContainer>> iterator = siteRoutes.entrySet().iterator();
         while (iterator.hasNext()) {
             ObjectTargetContainer container = iterator.next().getValue();
-            Iterator<Map.Entry<T, List<Method>>> entries = container.sites.entrySet().iterator();
+            Iterator<Map.Entry<T, Object>> entries = container.sites.entrySet().iterator();
             while (entries.hasNext()) {
                 if (site == entries.next().getKey()) {
                     entries.remove();
@@ -100,12 +102,7 @@ public class SitesHandler<T extends NetworkSite, C> {
             route = new ObjectTargetContainer();
             siteRoutes.put(type, route);
         }
-        List<Method> methods = route.sites.get(site);
-        if (methods == null) {
-            methods = new ArrayList<>();
-            route.sites.put(site, methods);
-        }
-        methods.add(receiverMethod);
+        route.sites.put(site, receiverMethod);
     }
 
     private void invokeReceiver(C context, T site, Method receiver, Object object) {
@@ -121,15 +118,15 @@ public class SitesHandler<T extends NetworkSite, C> {
     }
 
     private class ObjectTargetContainer {
-        private Map<T, List<Method>> sites = new HashMap<>();
+        private MultiValueMap<T, Method> sites = new MultiValueMap<>();
 
         private void pass(C connectionContext, Object sentObject) {
-            sites.forEach((site, methods) ->
-                    //have to be filtered and collected first, so all conditions are checked first before any method is actually called
-                    methods.stream().filter(method -> shouldInvokeReceiver(connectionContext, site, method, sentObject)).collect(Collectors.toList()).stream()
-                            .forEach(method ->
-                                    invokeReceiver(connectionContext, site, method, sentObject)));
+            sites.keySet().forEach(site -> sites.getCollection(site).stream().filter(method -> shouldInvokeReceiver(connectionContext, site, method, sentObject)).collect(Collectors.toList()).stream()
+                    .forEach(method ->
+                            invokeReceiver(connectionContext, site, method, sentObject)));
         }
-    }
 
+    }
 }
+
+

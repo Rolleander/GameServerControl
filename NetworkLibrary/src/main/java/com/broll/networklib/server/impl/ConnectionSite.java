@@ -5,21 +5,17 @@ import com.broll.networklib.network.nt.NT_LobbyClosed;
 import com.broll.networklib.network.nt.NT_LobbyCreate;
 import com.broll.networklib.network.nt.NT_LobbyInformation;
 import com.broll.networklib.network.nt.NT_LobbyJoin;
+import com.broll.networklib.network.nt.NT_LobbyJoined;
 import com.broll.networklib.network.nt.NT_LobbyNoJoin;
 import com.broll.networklib.network.nt.NT_LobbyKicked;
 import com.broll.networklib.network.nt.NT_ReconnectCheck;
-import com.broll.networklib.network.nt.NT_Reconnected;
 import com.broll.networklib.network.nt.NT_ServerInformation;
 import com.broll.networklib.server.LobbyServerSite;
 import com.broll.networklib.server.NetworkConnection;
 import com.broll.networklib.server.PackageRestriction;
 import com.broll.networklib.server.RestrictionType;
-import com.esotericsoftware.minlog.Log;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> extends LobbyServerSite<L, P> {
 
@@ -56,9 +52,9 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
         if (player != null && !player.getConnection().isActive() && player.getServerLobby() != null) {
             //reconnect player
             ServerLobby lobby = player.getServerLobby();
-            NT_Reconnected reconnected = new NT_Reconnected();
+            NT_LobbyJoined reconnected = new NT_LobbyJoined();
             lobby.fillLobbyUpdate(reconnected);
-            reconnected.playerName = player.getName();
+            reconnected.playerId = player.getId();
             reconnectedPlayer(player);
             getConnection().sendTCP(reconnected);
         } else {
@@ -81,13 +77,16 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
             if (reconnect) {
                 reconnectedPlayer(getPlayer());
             }
-            from.sendLobbyUpdate();
+            from.sendLobbyJoinUpdate(getPlayer());
             return;
         }
         if (initPlayerAndJoinLobby(join.lobbyId, join.playerName, join.authenticationKey)) {
             //remove from previous lobby
             from.removePlayer(getPlayer());
             from.checkAutoClose();
+            if (!from.isClosed()) {
+                from.sendLobbyUpdate();
+            }
         }
     }
 
@@ -118,6 +117,9 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
                     playerRegister.unregister(player.getAuthenticationKey());
                     lobby.removePlayer(player);
                     lobby.checkAutoClose();
+                    if (!lobby.isClosed()) {
+                        lobby.sendLobbyUpdate();
+                    }
                 }
             }
         }
@@ -139,7 +141,7 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
             if (reconnected) {
                 reconnectedPlayer(player);
             }
-            lobby.sendLobbyUpdate();
+            lobby.sendLobbyJoinUpdate(player);
         } else {
             getConnection().sendTCP(new NT_LobbyNoJoin());
         }

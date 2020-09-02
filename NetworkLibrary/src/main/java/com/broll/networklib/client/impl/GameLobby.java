@@ -1,5 +1,7 @@
 package com.broll.networklib.client.impl;
 
+import com.broll.networklib.client.GameClient;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +21,8 @@ public class GameLobby {
 
     private int playerLimit;
 
+    private int playerId;
+
     private boolean playerJoined = false;
 
     private Map<Integer, LobbyPlayer> players;
@@ -29,11 +33,20 @@ public class GameLobby {
 
     private Object settings;
 
-    public GameLobby() {
+    GameLobby() {
+        super();
     }
 
-    public Optional<LobbyPlayer> getPlayer(String name){
-        return getPlayers().stream().filter(p-> Objects.equals(name, p.getName())).findFirst();
+    public Optional<LobbyPlayer> getPlayer(String name) {
+        return getPlayers().stream().filter(p -> Objects.equals(name, p.getName())).findFirst();
+    }
+
+    public LobbyPlayer getPlayer(int id) {
+        return getPlayers().stream().filter(p -> p.getId() == id).findFirst().orElse(null);
+    }
+
+    public LobbyPlayer getMyPlayer() {
+        return getPlayer(getPlayerId());
     }
 
     public void setChatMessageListener(ChatMessageListener chatMessageListener) {
@@ -44,11 +57,11 @@ public class GameLobby {
         this.lobbyUpdateListener = lobbyUpdateListener;
     }
 
-    public LobbyUpdateListener getLobbyUpdateListener() {
+    LobbyUpdateListener getLobbyUpdateListener() {
         return lobbyUpdateListener;
     }
 
-    public ChatMessageListener getChatMessageListener() {
+    ChatMessageListener getChatMessageListener() {
         return chatMessageListener;
     }
 
@@ -78,10 +91,6 @@ public class GameLobby {
 
     void setPlayerLimit(int playerLimit) {
         this.playerLimit = playerLimit;
-    }
-
-    void setPlayerJoined(boolean playerJoined) {
-        this.playerJoined = playerJoined;
     }
 
     void setSettings(Object settings) {
@@ -118,5 +127,15 @@ public class GameLobby {
 
     public Object getSettings() {
         return settings;
+    }
+
+    void playerJoined(int playerId) {
+        playerJoined = true;
+        this.playerId = playerId;
+        getPlayer(playerId).setMe(true);
+    }
+
+    public int getPlayerId() {
+        return playerId;
     }
 }

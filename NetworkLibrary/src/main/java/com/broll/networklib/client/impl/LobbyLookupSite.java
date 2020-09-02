@@ -3,6 +3,7 @@ package com.broll.networklib.client.impl;
 import com.broll.networklib.PackageReceiver;
 import com.broll.networklib.client.ClientSite;
 import com.broll.networklib.client.GameClient;
+import com.broll.networklib.client.LobbyClientSite;
 import com.broll.networklib.network.INetworkRequest;
 import com.broll.networklib.network.IRegisterNetwork;
 import com.broll.networklib.network.NetworkException;
@@ -20,7 +21,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class LobbyLookupSite extends ClientSite {
+public class LobbyLookupSite extends LobbyClientSite {
 
     private ILobbyDiscovery lobbyDiscovery;
 

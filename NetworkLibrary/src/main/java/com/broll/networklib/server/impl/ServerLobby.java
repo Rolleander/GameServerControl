@@ -1,6 +1,7 @@
 package com.broll.networklib.server.impl;
 
 import com.broll.networklib.network.nt.NT_LobbyInformation;
+import com.broll.networklib.network.nt.NT_LobbyJoined;
 import com.broll.networklib.network.nt.NT_LobbyPlayerInfo;
 import com.broll.networklib.network.nt.NT_LobbyUpdate;
 import com.esotericsoftware.minlog.Log;
@@ -189,6 +190,20 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
         NT_LobbyUpdate update = new NT_LobbyUpdate();
         fillLobbyUpdate(update);
         sendToAllTCP(update);
+    }
+
+    void sendLobbyJoinUpdate(Player<P> joinedPlayer) {
+        NT_LobbyUpdate update = new NT_LobbyUpdate();
+        NT_LobbyJoined joined = new NT_LobbyJoined();
+        fillLobbyUpdate(update);
+        fillLobbyUpdate(joined);
+        getPlayers().forEach(p -> {
+            if (p == joinedPlayer) {
+                p.sendTCP(joined);
+            } else {
+                p.sendTCP(update);
+            }
+        });
     }
 
     void fillLobbyUpdate(NT_LobbyUpdate update) {
