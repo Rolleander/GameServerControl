@@ -21,15 +21,12 @@ public class LobbyHandler<L extends LobbySettings, P extends LobbySettings> {
     private LobbyCloseListener listener;
     private ILobbyCreationRequest<L, P> lobbyCreationRequestHandler = (player, lobbyName, settings) -> this.openLobby(lobbyName);
     private PlayerRegister playerRegister;
-    private LobbyServerSitesHandler sitesHandler = new LobbyServerSitesHandler(this);
+    private LobbyServerSitesHandler sitesHandler;
 
-    public LobbyHandler(LobbyCloseListener listener, PlayerRegister playerRegister) {
+    public LobbyHandler(LobbyCloseListener listener, PlayerRegister playerRegister, LobbyServerSitesHandler sitesHandler ) {
         this.listener = listener;
         this.playerRegister = playerRegister;
-    }
-
-    public LobbyServerSitesHandler getSitesHandler() {
-        return sitesHandler;
+        this.sitesHandler = sitesHandler;
     }
 
     public void setLobbyCreationRequestHandler(ILobbyCreationRequest<L, P> lobbyCreationRequestHandler) {

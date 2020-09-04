@@ -1,14 +1,14 @@
 package com.broll.networklib.server.impl;
 
-import com.broll.networklib.client.ClientSite;
 import com.broll.networklib.server.NetworkConnection;
-import com.broll.networklib.site.SitesHandler;
+import com.broll.networklib.site.MultiSitesHandler;
+import com.broll.networklib.site.SingleSitesHandler;
 
 import java.util.Arrays;
 
 public class BotConnection<P extends LobbySettings> extends NetworkConnection {
 
-    private SitesHandler<BotSite, Object> sites = new SitesHandler<>();
+    private SingleSitesHandler<BotSite, Object> sites = new SingleSitesHandler<>();
     private BotEndpoint endpoint;
 
     public BotConnection() {

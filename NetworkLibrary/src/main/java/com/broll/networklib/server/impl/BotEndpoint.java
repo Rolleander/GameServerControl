@@ -11,12 +11,8 @@ public class BotEndpoint<L extends LobbySettings, P extends LobbySettings> exten
     private LobbyServerSitesHandler<L, P> sitesHandler;
     private BotConnection<P> botConnection;
 
-    public BotEndpoint(IRegisterNetwork registerNetwork) {
-        super(registerNetwork);
-    }
-
     public BotEndpoint(LobbyServerSitesHandler sitesHandler, BotConnection botConnection) {
-        super(null);
+        super(null, sitesHandler);
         this.sitesHandler = sitesHandler;
         this.botConnection = botConnection;
     }

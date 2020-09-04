@@ -12,13 +12,12 @@ import com.broll.networklib.client.impl.LobbyReconnectSite;
 import com.broll.networklib.network.IRegisterNetwork;
 import com.broll.networklib.network.NetworkException;
 import com.broll.networklib.network.INetworkRequestAttempt;
+import com.broll.networklib.site.SiteReceiver;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.minlog.Log;
-import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -53,6 +52,10 @@ public class LobbyGameClient implements NetworkRegister {
         discoveryExecutor = Executors.newSingleThreadExecutor();
         this.client = client;
         register(lobbyConnectionSite);
+    }
+
+    public void setSiteReceiver(SiteReceiver<ClientSite, GameClient.ClientConnection> receiver) {
+        client.setSiteReceiver(receiver);
     }
 
     public void setClientAuthenticationKey(ClientAuthenticationKey clientAuthenticationKey) {

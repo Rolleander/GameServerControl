@@ -24,6 +24,10 @@ public abstract class ServerSite extends NetworkSite<GameServer> {
         this.connection = connection;
     }
 
+    public <T extends ServerSite> T accessSite(Class<T> siteClass){
+        return null;
+    }
+
     public void onConnect(NetworkConnection connection){
 
     }

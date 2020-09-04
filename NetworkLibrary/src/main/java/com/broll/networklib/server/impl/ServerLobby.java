@@ -1,5 +1,6 @@
 package com.broll.networklib.server.impl;
 
+import com.broll.networklib.network.nt.NT_ChatMessage;
 import com.broll.networklib.network.nt.NT_LobbyInformation;
 import com.broll.networklib.network.nt.NT_LobbyJoined;
 import com.broll.networklib.network.nt.NT_LobbyPlayerInfo;
@@ -9,7 +10,9 @@ import com.esotericsoftware.minlog.Log;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -41,6 +44,8 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
     private String name;
 
     private L data;
+
+    private Map<String, Object> sharedData = new HashMap<>();
 
     ServerLobby(LobbyHandler<L, P> lobbyHandler, String name, int id, LobbyCloseListener<L, P> closeListener) {
         this.lobbyHandler = lobbyHandler;
@@ -91,10 +96,6 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
 
     public void setListener(ServerLobbyListener listener) {
         this.listener = listener;
-    }
-
-    public synchronized void synchronizedAccess(Runnable runnable) {
-        runnable.run();
     }
 
     synchronized boolean addPlayer(Player<P> player) {
@@ -184,6 +185,13 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
         if (listener != null) {
             listener.playerLeft(this, player);
         }
+    }
+
+    public void chat(String from, String message) {
+        NT_ChatMessage chat = new NT_ChatMessage();
+        chat.from = from;
+        chat.message = message;
+        sendToAllTCP(chat);
     }
 
     public void sendLobbyUpdate() {
@@ -284,4 +292,7 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
         return data.getSettings();
     }
 
+    public Map<String, Object> getSharedData() {
+        return sharedData;
+    }
 }

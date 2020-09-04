@@ -4,7 +4,7 @@ import com.broll.networklib.GameEndpoint;
 import com.broll.networklib.network.IRegisterNetwork;
 import com.broll.networklib.network.NetworkException;
 import com.broll.networklib.network.NetworkRegistry;
-import com.broll.networklib.site.SitesHandler;
+import com.broll.networklib.site.MultiSitesHandler;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
@@ -24,12 +24,12 @@ public class GameServer extends GameEndpoint<ServerSite, NetworkConnection> {
     private boolean open = false;
 
     public GameServer(IRegisterNetwork registerNetwork) {
-        super(registerNetwork);
-        init();
+        this(registerNetwork, new ServerSitesHandler());
     }
 
-    void setSitesHandler(SitesHandler<ServerSite, NetworkConnection> handler) {
-        replaceHandler(handler);
+    public GameServer(IRegisterNetwork registerNetwork, MultiSitesHandler sitesHandler) {
+        super(registerNetwork, sitesHandler);
+        init();
     }
 
     public void open() {
@@ -76,7 +76,8 @@ public class GameServer extends GameEndpoint<ServerSite, NetworkConnection> {
             Log.info(c + " connected to server");
             NetworkConnection connection = (NetworkConnection) c;
             connection.setActive(true);
-            passAllSites(sites -> sites.forEach(site -> site.onConnect(connection)));
+            initConnection(connection);
+            passAllSites(connection, sites -> sites.forEach(site -> site.onConnect(connection)));
         }
 
         @Override
@@ -84,7 +85,8 @@ public class GameServer extends GameEndpoint<ServerSite, NetworkConnection> {
             Log.info(c + " disconnected from server");
             NetworkConnection connection = (NetworkConnection) c;
             connection.setActive(false);
-            passAllSites(sites -> sites.forEach(site -> site.onDisconnect(connection)));
+            passAllSites(connection, sites -> sites.forEach(site -> site.onDisconnect(connection)));
+            discardConnection(connection);
         }
 
         @Override

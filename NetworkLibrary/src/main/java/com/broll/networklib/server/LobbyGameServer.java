@@ -2,7 +2,6 @@ package com.broll.networklib.server;
 
 import com.broll.networklib.NetworkRegister;
 import com.broll.networklib.network.IRegisterNetwork;
-import com.broll.networklib.network.nt.NT_LobbyInformation;
 import com.broll.networklib.server.impl.ConnectionSite;
 import com.broll.networklib.server.impl.LobbyCloseListener;
 import com.broll.networklib.server.impl.LobbyHandler;
@@ -11,16 +10,20 @@ import com.broll.networklib.server.impl.Player;
 import com.broll.networklib.server.impl.LobbySettings;
 import com.broll.networklib.server.impl.PlayerRegister;
 import com.broll.networklib.server.impl.ServerLobby;
+import com.broll.networklib.site.SiteReceiver;
 import com.esotericsoftware.kryo.Kryo;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class LobbyGameServer<L extends LobbySettings, P extends LobbySettings> implements NetworkRegister {
 
     private GameServer server;
     private LobbyHandler<L, P> lobbyHandler;
     private ConnectionSite<L, P> connectionSite;
+    private Map<String, Object> sharedData = new HashMap<>();
 
     public LobbyGameServer(String name, IRegisterNetwork registerNetwork) {
         this(new GameServer(registerNetwork), name);
@@ -30,6 +33,7 @@ public class LobbyGameServer<L extends LobbySettings, P extends LobbySettings> i
         this.server = server;
         PlayerRegister playerRegister = new PlayerRegister();
         connectionSite = new ConnectionSite(name, playerRegister);
+        LobbyServerSitesHandler<L, P> sitesHandler = new LobbyServerSitesHandler<>();
         lobbyHandler = new LobbyHandler<>(new LobbyCloseListener<L, P>() {
             @Override
             public void closed(ServerLobby<L, P> lobby, List<Player<P>> players) {
@@ -40,10 +44,14 @@ public class LobbyGameServer<L extends LobbySettings, P extends LobbySettings> i
             public void kickedPlayer(Player<P> player) {
                 connectionSite.kickedPlayer(player);
             }
-        }, playerRegister);
-        server.setSitesHandler(lobbyHandler.getSitesHandler());
+        }, playerRegister, sitesHandler);
+        server.setSitesHandler(sitesHandler);
         register(connectionSite);
         register(new LobbySite());
+    }
+
+    public void setSiteReceiver(SiteReceiver<ServerSite, NetworkConnection> receiver) {
+        server.setSiteReceiver(receiver);
     }
 
     @Override
@@ -70,7 +78,7 @@ public class LobbyGameServer<L extends LobbySettings, P extends LobbySettings> i
     }
 
     public void register(LobbyServerSite<L, P>... sites) {
-        Arrays.stream(sites).forEach(site -> site.init(lobbyHandler));
+        Arrays.stream(sites).forEach(site -> site.init(this, lobbyHandler));
         server.register(sites);
     }
 
@@ -83,5 +91,7 @@ public class LobbyGameServer<L extends LobbySettings, P extends LobbySettings> i
         server.shutdown();
     }
 
-
+    Map<String, Object> getSharedData() {
+        return sharedData;
+    }
 }

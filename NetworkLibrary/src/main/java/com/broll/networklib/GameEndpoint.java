@@ -3,31 +3,33 @@ package com.broll.networklib;
 import com.broll.networklib.network.IRegisterNetwork;
 import com.broll.networklib.network.NetworkRegistry;
 import com.broll.networklib.network.INetworkRequestAttempt;
+import com.broll.networklib.site.AbstractSitesHandler;
 import com.broll.networklib.site.NetworkSite;
 import com.broll.networklib.site.ReceivingSites;
-import com.broll.networklib.site.SitesHandler;
-import com.esotericsoftware.kryo.Kryo;
+import com.broll.networklib.site.SiteReceiver;
 import com.esotericsoftware.minlog.Log;
 
-import java.util.List;
 import java.util.Arrays;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public abstract class GameEndpoint<T extends NetworkSite, C> implements NetworkRegister {
 
-    private SitesHandler<T, C> sites = new SitesHandler<>();
+    private AbstractSitesHandler<T, C> sites;
     private IRegisterNetwork registerNetwork;
 
-    public GameEndpoint(IRegisterNetwork registerNetwork) {
+    public GameEndpoint(IRegisterNetwork registerNetwork, AbstractSitesHandler<T, C> sitesHandler) {
         this.registerNetwork = registerNetwork;
+        this.sites = sitesHandler;
     }
 
     public IRegisterNetwork getRegisterNetwork() {
         return registerNetwork;
     }
 
-    protected void replaceHandler(SitesHandler<T, C> sites) {
+    public void setSiteReceiver(SiteReceiver<T, C> receiver) {
+        sites.setReceiver(receiver);
+    }
+
+    public void setSitesHandler(AbstractSitesHandler<T, C> sites) {
         this.sites = sites;
     }
 
@@ -45,8 +47,16 @@ public abstract class GameEndpoint<T extends NetworkSite, C> implements NetworkR
         registerNetwork.register(this);
     }
 
-    protected void passAllSites(ReceivingSites<T> receivers) {
-        receivers.receivers(sites.getSites());
+    protected void initConnection(C connectionContext) {
+        sites.initConnection(connectionContext);
+    }
+
+    protected void discardConnection(C connectionContext) {
+        sites.discardConnection(connectionContext);
+    }
+
+    protected void passAllSites(C connectionContext, ReceivingSites<T> receivers) {
+        receivers.receivers(sites.getSiteInstances(connectionContext).values());
     }
 
     protected void passReceived(C connectionContext, Object object, ReceivingSites<T> receiverSites) {
@@ -62,10 +72,6 @@ public abstract class GameEndpoint<T extends NetworkSite, C> implements NetworkR
 
     public void unregister(T... sites) {
         Arrays.asList(sites).forEach(site -> this.sites.remove(site));
-    }
-
-    public List<T> getRegisteredSites() {
-        return this.sites.getSites();
     }
 
     public static void attemptRequest(INetworkRequestAttempt request, Runnable attempt) {

@@ -12,7 +12,7 @@ import com.broll.networklib.network.nt.NT_ReconnectCheck;
 import com.broll.networklib.network.nt.NT_ServerInformation;
 import com.broll.networklib.server.LobbyServerSite;
 import com.broll.networklib.server.NetworkConnection;
-import com.broll.networklib.server.PackageRestriction;
+import com.broll.networklib.server.ConnectionRestriction;
 import com.broll.networklib.server.RestrictionType;
 
 import java.util.List;
@@ -28,7 +28,7 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
         this.playerRegister = playerRegister;
     }
 
-    @PackageRestriction(RestrictionType.NONE)
+    @ConnectionRestriction(RestrictionType.NONE)
     @PackageReceiver
     public void receive(NT_ServerInformation info) {
         NT_ServerInformation serverInfo = new NT_ServerInformation();
@@ -37,13 +37,13 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
         getConnection().sendTCP(serverInfo);
     }
 
-    @PackageRestriction(RestrictionType.NOT_IN_LOBBY)
+    @ConnectionRestriction(RestrictionType.NOT_IN_LOBBY)
     @PackageReceiver
     public void joinLobby(NT_LobbyJoin join) {
         initPlayerAndJoinLobby(join.lobbyId, join.playerName, join.authenticationKey);
     }
 
-    @PackageRestriction(RestrictionType.NOT_IN_LOBBY)
+    @ConnectionRestriction(RestrictionType.NOT_IN_LOBBY)
     @PackageReceiver
     public void reconnectCheck(NT_ReconnectCheck check) {
         String key = check.authenticationKey;
@@ -63,7 +63,7 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
         }
     }
 
-    @PackageRestriction(RestrictionType.IN_LOBBY)
+    @ConnectionRestriction(RestrictionType.IN_LOBBY)
     @PackageReceiver
     public void switchLobby(NT_LobbyJoin join) {
         ServerLobby from = getLobby();

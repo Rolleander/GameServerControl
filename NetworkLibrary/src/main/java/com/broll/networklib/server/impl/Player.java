@@ -3,6 +3,9 @@ package com.broll.networklib.server.impl;
 import com.broll.networklib.network.nt.NT_LobbyPlayerInfo;
 import com.broll.networklib.server.NetworkConnection;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Player<P extends LobbySettings> {
 
     private String name;
@@ -13,6 +16,7 @@ public class Player<P extends LobbySettings> {
     private String authenticationKey;
     private PlayerListener listener;
     private P data;
+    private Map<String, Object> sharedData = new HashMap<>();
 
     public Player(int id, String authenticationKey, NetworkConnection connection) {
         this.id = id;
@@ -82,6 +86,10 @@ public class Player<P extends LobbySettings> {
 
     public NetworkConnection getConnection() {
         return connection;
+    }
+
+    public Map<String, Object> getSharedData() {
+        return sharedData;
     }
 
     public Object getSettings() {

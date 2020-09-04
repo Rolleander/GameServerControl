@@ -4,6 +4,7 @@ import com.broll.networklib.GameEndpoint;
 import com.broll.networklib.network.IRegisterNetwork;
 import com.broll.networklib.network.NetworkException;
 import com.broll.networklib.network.NetworkRegistry;
+import com.broll.networklib.site.SingleSitesHandler;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
@@ -17,14 +18,15 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-public class GameClient extends GameEndpoint<ClientSite, Object> {
+public class GameClient extends GameEndpoint<ClientSite, GameClient.ClientConnection> {
 
     private final static int CONNECTION_TIMEOUT = 5000;
     private Client client = new Client();
     private String connectedIp;
+    private final ClientConnection connection = new ClientConnection();
 
     public GameClient(IRegisterNetwork registerNetwork) {
-        super(registerNetwork);
+        super(registerNetwork, new SingleSitesHandler<>());
         init();
     }
 
@@ -77,13 +79,15 @@ public class GameClient extends GameEndpoint<ClientSite, Object> {
         @Override
         public void connected(Connection c) {
             connectedIp = c.getRemoteAddressTCP().getHostName();
-            passAllSites(sites -> sites.forEach(site -> site.onConnect()));
+            initConnection(connection);
+            passAllSites(connection, sites -> sites.forEach(site -> site.onConnect()));
         }
 
         @Override
         public void disconnected(Connection c) {
-            passAllSites(sites -> sites.forEach(site -> site.onDisconnect()));
+            passAllSites(connection, sites -> sites.forEach(site -> site.onDisconnect()));
             connectedIp = null;
+            discardConnection(connection);
         }
 
         @Override
@@ -94,6 +98,10 @@ public class GameClient extends GameEndpoint<ClientSite, Object> {
 
     protected void received(Object o) {
         Log.info("Client received " + o);
-        passReceived(null, o, sites -> sites.forEach(site -> site.receive(o)));
+        passReceived(connection, o, sites -> sites.forEach(site -> site.receive(o)));
+    }
+
+    public class ClientConnection {
+        //empty dummy since clients do not have multiple connections
     }
 }
