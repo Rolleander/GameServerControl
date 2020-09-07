@@ -17,8 +17,8 @@ public class SingleSitesHandler<T extends NetworkSite, C> extends AbstractSitesH
     }
 
     @Override
-    public Map<Class, T> getSiteInstances(C connection) {
-        Map<Class, T> instances = new HashMap<>();
+    public Map<Class<T>, T> getSiteInstances(C connection) {
+        Map<Class<T>, T> instances = new HashMap<>();
         siteModificationLock.readLock().lock();
         instances.putAll(sites);
         siteModificationLock.readLock().unlock();

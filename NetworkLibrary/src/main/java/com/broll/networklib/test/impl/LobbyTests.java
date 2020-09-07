@@ -6,6 +6,8 @@ import com.broll.networklib.server.LobbyGameServer;
 import com.broll.networklib.server.impl.Player;
 import com.broll.networklib.server.impl.ServerLobby;
 import com.broll.networklib.test.NetworkTest;
+import com.esotericsoftware.minlog.Log;
+import com.sun.media.jfxmedia.logging.Logger;
 
 import org.junit.Test;
 import org.testng.annotations.AfterTest;

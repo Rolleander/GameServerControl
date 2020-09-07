@@ -35,7 +35,7 @@ public abstract class AbstractSitesHandler<T extends NetworkSite, C> {
 
     protected final Kryo kryo = new Kryo();
 
-    public abstract Map<Class, T> getSiteInstances(C connection);
+    public abstract Map<Class<T>, T> getSiteInstances(C connection);
 
     public void setReceiver(SiteReceiver<T, C> siteReceiver) {
         this.siteReceiver = siteReceiver;

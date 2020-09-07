@@ -38,8 +38,8 @@ public class MultiSitesHandler<T extends NetworkSite, C> extends AbstractSitesHa
     }
 
     @Override
-    public Map<Class, T> getSiteInstances(C connection) {
-        Map<Class, T> instances = new HashMap<>();
+    public Map<Class<T>, T> getSiteInstances(C connection) {
+        Map<Class<T>, T> instances = new HashMap<>();
         siteModificationLock.readLock().lock();
         instances.putAll(activeSites.get(connection));
         siteModificationLock.readLock().unlock();

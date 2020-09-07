@@ -22,6 +22,7 @@ dependencies {
 
     // api 'com.broll.networklib'
     // https://mvnrepository.com/artifact/kryonet/kryonet-all
+    compile group: 'com.esotericsoftware.minlog', name: 'minlog', version: '1.2'
     compile group: 'kryonet', name: 'kryonet-all', version: '2.21'
 
     implementation("com.google.guava:guava:28.2-jre")
@@ -35,7 +36,6 @@ dependencies {
     // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
 
-    implementation group: 'com.esotericsoftware.minlog', name: 'minlog', version: '1.2'
 
     implementation group: 'org.apache.commons', name: 'commons-collections4', version: '4.0'
 

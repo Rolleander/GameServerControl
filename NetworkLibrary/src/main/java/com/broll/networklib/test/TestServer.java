@@ -68,7 +68,6 @@ public class TestServer extends GameServer {
     }
 
     void receive(TestClient client, Object o) {
-        System.out.println("server received " + o + " from client " + client);
         received(connections.get(client), o);
         ReceivedPackage pkg = new ReceivedPackage();
         pkg.from = client;

@@ -73,7 +73,6 @@ public class TestClient extends GameClient {
 
     void receive(Object object) {
         this.received(object);
-        System.out.println("client received " + object);
         receivedObjects.add(object);
     }
 }

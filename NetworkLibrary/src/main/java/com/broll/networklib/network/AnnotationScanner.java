@@ -1,5 +1,6 @@
 package com.broll.networklib.network;
 
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -22,7 +23,7 @@ public final class AnnotationScanner {
 
     public static <A extends Annotation> List<Pair<Field, A>> findAnnotatedFields(Object object, Class<A> annotationClass) {
         List<Pair<Field, A>> annotations = new ArrayList<>();
-        Arrays.stream(object.getClass().getFields()).forEach(field -> {
+        Arrays.stream(object.getClass().getDeclaredFields()).forEach(field -> {
             A annotation = field.getAnnotation(annotationClass);
             if (annotation != null) {
                 annotations.add(Pair.of(field, annotation));

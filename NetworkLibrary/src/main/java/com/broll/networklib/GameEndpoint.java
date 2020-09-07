@@ -10,6 +10,9 @@ import com.broll.networklib.site.SiteReceiver;
 import com.esotericsoftware.minlog.Log;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 public abstract class GameEndpoint<T extends NetworkSite, C> implements NetworkRegister {
 
@@ -40,6 +43,10 @@ public abstract class GameEndpoint<T extends NetworkSite, C> implements NetworkR
     public void registerNetworkType(Class type) {
         Log.trace("Register " + type);
         getKryo().register(type);
+    }
+
+    public Map<Class<T>, T> getSiteInstances(C context){
+        return sites.getSiteInstances(context);
     }
 
     protected void init() {

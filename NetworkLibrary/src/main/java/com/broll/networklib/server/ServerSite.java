@@ -7,7 +7,7 @@ public abstract class ServerSite extends NetworkSite<GameServer> {
     protected GameServer server;
     private NetworkConnection connection;
 
-    public void init(GameServer server){
+    public void init(GameServer server) {
         super.init(server);
         this.server = server;
     }
@@ -20,19 +20,21 @@ public abstract class ServerSite extends NetworkSite<GameServer> {
         return connection;
     }
 
-    public void receive(NetworkConnection connection, Object object){
+    public void receive(NetworkConnection connection, Object object) {
         this.connection = connection;
     }
 
-    public <T extends ServerSite> T accessSite(Class<T> siteClass){
-        return null;
+    public <T extends ServerSite> T accessSite(Class<T> siteClass) {
+        T site = (T) server.getSiteInstances(connection).get(siteClass);
+        site.receive(connection, null);
+        return site;
     }
 
-    public void onConnect(NetworkConnection connection){
+    public void onConnect(NetworkConnection connection) {
 
     }
 
-    public void onDisconnect(NetworkConnection connection){
+    public void onDisconnect(NetworkConnection connection) {
 
     }
 }

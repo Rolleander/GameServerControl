@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.esotericsoftware.minlog.Log.LEVEL_TRACE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 

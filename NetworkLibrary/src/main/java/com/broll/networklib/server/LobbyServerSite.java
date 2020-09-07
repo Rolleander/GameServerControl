@@ -5,9 +5,14 @@ import com.broll.networklib.server.impl.LobbyHandler;
 import com.broll.networklib.server.impl.Player;
 import com.broll.networklib.server.impl.LobbySettings;
 import com.broll.networklib.server.impl.ServerLobby;
+import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.minlog.Log;
 
+import org.apache.commons.lang3.ClassUtils;
+
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +36,7 @@ public abstract class LobbyServerSite<L extends LobbySettings, P extends LobbySe
         SharedField sharedField = new SharedField();
         sharedField.field = field;
         sharedField.shareLevel = shared.value();
-        sharedField.dataClass = field.getClass();
+        sharedField.dataClass = field.getType();
         //key must be unique for site
         sharedField.key = this.getClass().getName() + ":" + field.getType().getName() + ":" + field.getName();
         sharedFields.add(sharedField);
@@ -57,14 +62,27 @@ public abstract class LobbyServerSite<L extends LobbySettings, P extends LobbySe
         Object object = sharedStorage.get(key);
         if (object == null) {
             //create
-            try {
-                object = dataClass.newInstance();
-                sharedStorage.put(key, object);
-            } catch (InstantiationException | IllegalAccessException e) {
-                Log.error("Failed to init shared field data " + dataClass, e);
-            }
+            object = instantiateClass(dataClass);
+            sharedStorage.put(key, object);
         }
         return object;
+    }
+
+    private Object instantiateClass(Class dataClass) {
+        try {
+            if (dataClass.isMemberClass()) {
+                //inner class default constructor with outer object
+                Constructor constructor = dataClass.getDeclaredConstructors()[0];
+                constructor.setAccessible(true);
+                return constructor.newInstance(this);
+            } else {
+                //default constructor
+                return dataClass.newInstance();
+            }
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            Log.error("Failed to init shared field data " + dataClass, e);
+        }
+        return null;
     }
 
     private Map<String, Object> getSharedStorage(ShareLevel shareLevel) {
