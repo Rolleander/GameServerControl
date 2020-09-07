@@ -6,6 +6,10 @@ public interface ServerLobbyListener<L  extends LobbySettings,P  extends LobbySe
 
     void playerLeft(ServerLobby<L,P> lobby, Player<P> player);
 
+    void playerDisconnected(ServerLobby<L,P> lobby, Player<P> player);
+
+    void playerReconnected(ServerLobby<L,P> lobby, Player<P> player);
+
     void lobbyClosed(ServerLobby<L,P> lobby);
 
 }

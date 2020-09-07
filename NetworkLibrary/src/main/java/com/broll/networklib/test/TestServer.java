@@ -35,6 +35,14 @@ public class TestServer extends GameServer {
         TestConnection connection = new TestConnection(client);
         connections.put(client, connection);
         initConnection(connection);
+        passAllSites(connection, sites -> sites.forEach(site -> site.onConnect(connection)));
+    }
+
+    public void disconnect(TestClient client) {
+        TestConnection connection = connections.get(client);
+        connection.setActive(false);
+        connections.remove(connection);
+        passAllSites(connection, sites -> sites.forEach(site -> site.onDisconnect(connection)));
     }
 
     public <T> T assureReceived(Class<T> type, TestClient from) {

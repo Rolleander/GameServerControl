@@ -14,7 +14,7 @@ public class TestClient extends GameClient {
     private int timeout;
     private boolean connected = false;
 
-    public TestClient(IRegisterNetwork registerNetwork,int timeout) {
+    public TestClient(IRegisterNetwork registerNetwork, int timeout) {
         super(registerNetwork);
         this.timeout = timeout;
     }
@@ -27,6 +27,7 @@ public class TestClient extends GameClient {
     @Override
     public void shutdown() {
         //do nothing
+        disconnect(server);
     }
 
     public void connect(TestServer server) {
@@ -36,7 +37,11 @@ public class TestClient extends GameClient {
         server.connected(this);
     }
 
-    public void dropReceivedPackages(){
+    public void disconnect(TestServer server) {
+        server.disconnect(this);
+    }
+
+    public void dropReceivedPackages() {
         receivedObjects.clear();
     }
 
@@ -68,7 +73,7 @@ public class TestClient extends GameClient {
 
     void receive(Object object) {
         this.received(object);
-        System.out.println("client received "+object);
+        System.out.println("client received " + object);
         receivedObjects.add(object);
     }
 }

@@ -164,7 +164,6 @@ public class LobbyGameClient implements NetworkRegister {
         return discoveryTask(false, () -> {
             try {
                 return LobbyReconnectSite.checkForReconnect(ip, client, clientAuthenticationKey, lobby -> {
-                    connectToServer(ip);
                     lobbyConnectionSite.reconnectedToLobby(lobby);
                     reconnect.reconnected(lobby);
                 }).get();

@@ -8,6 +8,7 @@ import com.broll.networklib.client.LobbyClientSite;
 import com.broll.networklib.network.IRegisterNetwork;
 import com.broll.networklib.network.nt.NT_LobbyJoined;
 import com.broll.networklib.network.nt.NT_LobbyNoJoin;
+import com.broll.networklib.network.nt.NT_LobbyReconnected;
 import com.broll.networklib.network.nt.NT_ReconnectCheck;
 import com.esotericsoftware.minlog.Log;
 
@@ -64,13 +65,9 @@ public class LobbyReconnectSite extends LobbyClientSite {
     }
 
     @PackageReceiver
-    public void reconnected(NT_LobbyJoined reconnected) {
+    public void reconnected(NT_LobbyReconnected reconnected) {
         GameLobby lobby = new GameLobby();
-        lobby.setSettings(reconnected.settings);
-        lobby.setLobbyId(reconnected.lobbyId);
-        lobby.setName(reconnected.lobbyName);
-        lobby.setPlayerCount(reconnected.playerCount);
-        lobby.setPlayerLimit(reconnected.playerLimit);
+        LobbyLookupSite.updateLobbyInfo(lobby, reconnected);
         lobby.setServerIp(getClient().getConnectedIp());
         Map<Integer, LobbyPlayer> players = new HashMap<>();
         Arrays.stream(reconnected.players).forEach(player -> {

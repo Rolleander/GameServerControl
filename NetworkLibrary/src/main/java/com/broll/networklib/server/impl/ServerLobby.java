@@ -169,7 +169,17 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
         if (playerLimit == NO_LIMIT) {
             return false;
         }
-        return players.size() < playerLimit;
+        return players.size() >= playerLimit;
+    }
+
+    void playerChangedConnectionStatus(Player<P> player, boolean connected) {
+        if (listener != null) {
+            if (connected) {
+                listener.playerReconnected(this, player);
+            } else {
+                listener.playerDisconnected(this, player);
+            }
+        }
     }
 
     void removePlayer(Player<P> player) {

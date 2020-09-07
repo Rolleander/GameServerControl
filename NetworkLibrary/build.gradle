@@ -18,7 +18,9 @@ repositories {
 }
 
 dependencies {
-   // api 'com.broll.networklib'
+    implementation 'org.testng:testng:6.9.6'
+
+    // api 'com.broll.networklib'
     // https://mvnrepository.com/artifact/kryonet/kryonet-all
     compile group: 'kryonet', name: 'kryonet-all', version: '2.21'
 
@@ -38,5 +40,8 @@ dependencies {
     implementation group: 'org.apache.commons', name: 'commons-collections4', version: '4.0'
 
     // Use JUnit test framework
-    testImplementation 'junit:junit:4.12'
+
+    testImplementation 'junit:junit:4.+'
+    testImplementation "org.mockito:mockito-all:1.9.+"
+
 }

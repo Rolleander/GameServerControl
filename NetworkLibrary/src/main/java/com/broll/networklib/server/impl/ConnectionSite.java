@@ -8,6 +8,7 @@ import com.broll.networklib.network.nt.NT_LobbyJoin;
 import com.broll.networklib.network.nt.NT_LobbyJoined;
 import com.broll.networklib.network.nt.NT_LobbyNoJoin;
 import com.broll.networklib.network.nt.NT_LobbyKicked;
+import com.broll.networklib.network.nt.NT_LobbyReconnected;
 import com.broll.networklib.network.nt.NT_ReconnectCheck;
 import com.broll.networklib.network.nt.NT_ServerInformation;
 import com.broll.networklib.server.LobbyServerSite;
@@ -52,11 +53,12 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
         if (player != null && !player.getConnection().isActive() && player.getServerLobby() != null) {
             //reconnect player
             ServerLobby lobby = player.getServerLobby();
-            NT_LobbyJoined reconnected = new NT_LobbyJoined();
+            NT_LobbyReconnected reconnected = new NT_LobbyReconnected();
             lobby.fillLobbyUpdate(reconnected);
             reconnected.playerId = player.getId();
             reconnectedPlayer(player);
             getConnection().sendTCP(reconnected);
+            lobby.playerChangedConnectionStatus(player, true);
         } else {
             //is a new player, cant be reconnected
             getConnection().sendTCP(new NT_LobbyNoJoin());
@@ -112,7 +114,10 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
             }
             if (player.inLobby()) {
                 ServerLobby lobby = player.getServerLobby();
-                if (!lobby.isLocked()) {
+                if (lobby.isLocked()) {
+                    //notify lobby player disconnected
+                    lobby.playerChangedConnectionStatus(player, false);
+                } else {
                     //remove from lobby and register
                     playerRegister.unregister(player.getAuthenticationKey());
                     lobby.removePlayer(player);
@@ -149,6 +154,7 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
     }
 
     private void reconnectedPlayer(Player player) {
+        player.setConnection(getConnection());
         getConnection().setPlayer(player);
         if (!player.isOnline()) {
             player.updateOnlineStatus(true);

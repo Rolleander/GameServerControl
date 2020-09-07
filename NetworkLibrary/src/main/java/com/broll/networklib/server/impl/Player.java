@@ -24,6 +24,10 @@ public class Player<P extends LobbySettings> {
         this.connection = connection;
     }
 
+    void setConnection(NetworkConnection connection) {
+        this.connection = connection;
+    }
+
     public void setData(P data) {
         this.data = data;
     }

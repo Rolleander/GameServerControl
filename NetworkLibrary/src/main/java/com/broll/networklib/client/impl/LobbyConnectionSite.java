@@ -17,26 +17,28 @@ import com.broll.networklib.network.nt.NT_LobbyUpdate;
 import com.broll.networklib.network.nt.NT_LobbyKicked;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class LobbyConnectionSite extends LobbyClientSite {
 
     private INetworkRequestAttempt<GameLobby> request;
     private GameLobby lobby;
-    private Map<Integer, LobbyPlayer> players;
+    private Map<Integer, LobbyPlayer> players = new ConcurrentHashMap<>();
     private ILobbyConnectionListener lobbyConnectionListener;
 
     public LobbyConnectionSite(ILobbyConnectionListener lobbyConnectionListener) {
         this.lobbyConnectionListener = lobbyConnectionListener;
     }
 
-    private void initRequest(INetworkRequestAttempt<GameLobby> request, GameLobby lobby) {
+    private synchronized  void initRequest(INetworkRequestAttempt<GameLobby> request, GameLobby lobby) {
         this.lobby = lobby;
         this.request = request;
-        this.players = new HashMap<>();
+        this.players.clear();
     }
 
     public void tryJoinLobby(GameLobby lobby, String playerName, ClientAuthenticationKey secret, INetworkRequestAttempt<GameLobby> request) {
@@ -71,9 +73,7 @@ public class LobbyConnectionSite extends LobbyClientSite {
                 lobby.setServerIp(getClient().getConnectedIp());
             }
         }
-        //update lobby info
-        LobbyLookupSite.updateLobbyInfo(lobby, lobbyJoin);
-        updateLobbyPlayers(lobbyJoin.players);
+        updateLobby(lobbyJoin);
         if (!lobby.isPlayerJoined()) {
             joinLobby(lobbyJoin.playerId);
         }
@@ -81,13 +81,17 @@ public class LobbyConnectionSite extends LobbyClientSite {
 
     @PackageReceiver
     public void receive(NT_LobbyUpdate lobbyUpdate) {
-        //update lobby info
-        LobbyLookupSite.updateLobbyInfo(lobby, lobbyUpdate);
-        updateLobbyPlayers(lobbyUpdate.players);
+        updateLobby(lobbyUpdate);
         LobbyUpdateListener listener = lobby.getLobbyUpdateListener();
         if (listener != null) {
             listener.lobbyUpdated();
         }
+    }
+
+    private synchronized void updateLobby(NT_LobbyUpdate lobbyUpdate){
+        //update lobby info
+        LobbyLookupSite.updateLobbyInfo(lobby, lobbyUpdate);
+        updateLobbyPlayers(lobbyUpdate.players);
     }
 
     @PackageReceiver
@@ -134,13 +138,13 @@ public class LobbyConnectionSite extends LobbyClientSite {
         resetLobby();
     }
 
-    private void resetLobby() {
+    private synchronized void resetLobby() {
         lobbyConnectionListener.leftLobby();
         lobby = null;
         players.clear();
     }
 
-    private void joinLobby(int playerId) {
+    private synchronized void joinLobby(int playerId) {
         lobbyConnectionListener.lobbyJoined(lobby);
         lobby.setPlayers(players);
         lobby.playerJoined(playerId);
@@ -149,7 +153,7 @@ public class LobbyConnectionSite extends LobbyClientSite {
         request = null;
     }
 
-    private void updateLobbyPlayers(NT_LobbyPlayerInfo[] playersInfo) {
+    private synchronized void updateLobbyPlayers(NT_LobbyPlayerInfo[] playersInfo) {
         for (NT_LobbyPlayerInfo player : playersInfo) {
             int id = player.id;
             LobbyPlayer lobbyPlayer = players.get(id);
