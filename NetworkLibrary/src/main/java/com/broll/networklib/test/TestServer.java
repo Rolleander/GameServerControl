@@ -16,7 +16,7 @@ public class TestServer extends GameServer {
     private List<ReceivedPackage> received = new ArrayList<>();
     private int timeout;
 
-    public TestServer(IRegisterNetwork registerNetwork,int timeout) {
+    public TestServer(IRegisterNetwork registerNetwork, int timeout) {
         super(registerNetwork);
         this.timeout = timeout;
     }
@@ -34,6 +34,7 @@ public class TestServer extends GameServer {
     void connected(TestClient client) {
         TestConnection connection = new TestConnection(client);
         connections.put(client, connection);
+        initConnection(connection);
     }
 
     public <T> T assureReceived(Class<T> type, TestClient from) {
@@ -50,16 +51,16 @@ public class TestServer extends GameServer {
         return (T) pkg.pkg;
     }
 
-    public NetworkConnection getConnection(TestClient client){
+    public NetworkConnection getConnection(TestClient client) {
         return connections.get(client);
     }
 
-    public void dropReceivedPackages(){
+    public void dropReceivedPackages() {
         received.clear();
     }
 
     void receive(TestClient client, Object o) {
-        System.out.println("server received "+o+" from client "+client);
+        System.out.println("server received " + o + " from client " + client);
         received(connections.get(client), o);
         ReceivedPackage pkg = new ReceivedPackage();
         pkg.from = client;

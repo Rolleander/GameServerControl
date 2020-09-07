@@ -29,7 +29,7 @@ import java.util.stream.Stream;
 
 public class MultiSitesHandler<T extends NetworkSite, C> extends AbstractSitesHandler<T, C> {
 
-    private Map<C, Map<Class, T>> activeSites = new HashMap<>();
+    private Map<C, Map<Class<T>, T>> activeSites = new HashMap<>();
 
     private final Kryo kryo = new Kryo();
 
@@ -49,12 +49,12 @@ public class MultiSitesHandler<T extends NetworkSite, C> extends AbstractSitesHa
     @Override
     protected void putSite(T site) {
         super.putSite(site);
-        activeSites.values().forEach(sites -> sites.put(site.getClass(), clone(site)));
+        activeSites.values().forEach(sites -> sites.put((Class<T>) site.getClass(), clone(site)));
     }
 
     @Override
     protected void removeSite(T site) {
-        Iterator<Map.Entry<Class<T>, ObjectTargetContainer>> iterator = siteRoutes.entrySet().iterator();
+        Iterator<Map.Entry<Class, ObjectTargetContainer>> iterator = siteRoutes.entrySet().iterator();
         while (iterator.hasNext()) {
             MultiTargetContainer container = (MultiTargetContainer) iterator.next().getValue();
             Iterator<Map.Entry<Class<T>, Object>> entries = container.sites.entrySet().iterator();

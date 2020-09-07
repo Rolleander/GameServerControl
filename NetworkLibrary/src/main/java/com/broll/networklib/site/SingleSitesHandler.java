@@ -27,7 +27,7 @@ public class SingleSitesHandler<T extends NetworkSite, C> extends AbstractSitesH
 
     @Override
     protected void removeSite(T site) {
-        Iterator<Map.Entry<Class<T>, ObjectTargetContainer>> iterator = siteRoutes.entrySet().iterator();
+        Iterator<Map.Entry<Class, ObjectTargetContainer>> iterator = siteRoutes.entrySet().iterator();
         while (iterator.hasNext()) {
             ClientTargetContainer container = (ClientTargetContainer) iterator.next().getValue();
             Iterator<Map.Entry<T, Object>> entries = container.sites.entrySet().iterator();

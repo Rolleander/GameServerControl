@@ -71,11 +71,12 @@ public class LobbyConnectionSite extends LobbyClientSite {
                 lobby.setServerIp(getClient().getConnectedIp());
             }
         }
+        //update lobby info
+        LobbyLookupSite.updateLobbyInfo(lobby, lobbyJoin);
+        updateLobbyPlayers(lobbyJoin.players);
         if (!lobby.isPlayerJoined()) {
             joinLobby(lobbyJoin.playerId);
         }
-        //update lobby info
-        receive((NT_LobbyUpdate) lobbyJoin);
     }
 
     @PackageReceiver
@@ -141,9 +142,8 @@ public class LobbyConnectionSite extends LobbyClientSite {
 
     private void joinLobby(int playerId) {
         lobbyConnectionListener.lobbyJoined(lobby);
-        players.clear();
-        lobby.playerJoined(playerId);
         lobby.setPlayers(players);
+        lobby.playerJoined(playerId);
         //first update joins the player, so forward to request
         request.receive(lobby);
         request = null;

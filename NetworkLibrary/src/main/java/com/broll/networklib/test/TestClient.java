@@ -32,6 +32,7 @@ public class TestClient extends GameClient {
     public void connect(TestServer server) {
         this.server = server;
         this.connected = true;
+
         server.connected(this);
     }
 

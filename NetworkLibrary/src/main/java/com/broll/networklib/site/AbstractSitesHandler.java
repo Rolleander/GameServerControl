@@ -23,11 +23,11 @@ public abstract class AbstractSitesHandler<T extends NetworkSite, C> {
         Log.error("No receiverMethod registered for network object " + message);
     };
 
-    protected Map<Class, T> sites = new HashMap<>();
+    protected Map<Class<T>, T> sites = new HashMap<>();
 
     private UnknownMessageReceiver unknownMessageReceiver = DEFAULT_UNKNOWN_MESSAGE_RECEIVER;
 
-    protected Map<Class<T>, ObjectTargetContainer> siteRoutes = new HashMap<>();
+    protected Map<Class, ObjectTargetContainer> siteRoutes = new HashMap<>();
 
     protected final ReadWriteLock siteModificationLock = new ReentrantReadWriteLock();
 
@@ -35,7 +35,7 @@ public abstract class AbstractSitesHandler<T extends NetworkSite, C> {
 
     protected final Kryo kryo = new Kryo();
 
-    public abstract Map<Class,T> getSiteInstances(C connection);
+    public abstract Map<Class, T> getSiteInstances(C connection);
 
     public void setReceiver(SiteReceiver<T, C> siteReceiver) {
         this.siteReceiver = siteReceiver;
@@ -47,13 +47,13 @@ public abstract class AbstractSitesHandler<T extends NetworkSite, C> {
 
     public final void add(T site) {
         siteModificationLock.writeLock().lock();
-        initRoute(site);
         putSite(site);
+        initRoute(site);
         siteModificationLock.writeLock().unlock();
     }
 
     protected void putSite(T site) {
-        sites.put(site.getClass(), site);
+        sites.put((Class<T>) site.getClass(), site);
     }
 
     public final void remove(T site) {
@@ -74,7 +74,7 @@ public abstract class AbstractSitesHandler<T extends NetworkSite, C> {
             if (m.getParameterCount() == 1) {
                 Parameter p = m.getParameters()[0];
                 Class type = p.getType();
-                registerRoute(type, m);
+                registerRoute(type, site, m);
             } else {
                 Log.error("PackageReceiver method " + m + " of object " + site + " has not correct amount of parameters (1)");
             }
@@ -97,13 +97,13 @@ public abstract class AbstractSitesHandler<T extends NetworkSite, C> {
         siteModificationLock.readLock().unlock();
     }
 
-    private void registerRoute(Class<T> type, Method receiverMethod) {
+    private void registerRoute(Class type, T site, Method receiverMethod) {
         ObjectTargetContainer route = siteRoutes.get(type);
         if (route == null) {
             route = createContainer();
             siteRoutes.put(type, route);
         }
-        registerContainerRoute(route, type, receiverMethod);
+        registerContainerRoute(route, (Class<T>) site.getClass(), receiverMethod);
     }
 
     protected abstract ObjectTargetContainer createContainer();
