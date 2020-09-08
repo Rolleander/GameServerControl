@@ -122,8 +122,9 @@ public abstract class AbstractSitesHandler<T extends NetworkSite, C> {
 
         protected void pass(Collection<T> instances, C connectionContext, Object sentObject) {
             instances.forEach(site -> getTargetMethods(site).stream().filter(method -> shouldInvokeReceiver(connectionContext, site, method, sentObject))
-                    .collect(Collectors.toList()).stream().forEach(method ->
-                            siteReceiver.receive(connectionContext, site, method, sentObject)));
+                    //must be collected in between, so filter conditions are fixed before they could be changed from invoked sites
+                    .collect(Collectors.toList()).stream()
+                    .forEach(method -> siteReceiver.receive(connectionContext, site, method, sentObject)));
         }
     }
 

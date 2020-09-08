@@ -6,20 +6,25 @@ import com.broll.networklib.client.impl.GameLobby;
 import com.broll.networklib.client.impl.ILobbyDiscovery;
 import com.broll.networklib.network.INetworkRequestAttempt;
 import com.broll.networklib.network.IRegisterNetwork;
-import com.broll.networklib.server.GameServer;
 import com.broll.networklib.server.LobbyGameServer;
+import com.broll.networklib.server.NetworkConnection;
 import com.broll.networklib.server.impl.LobbySettings;
 import com.broll.networklib.server.impl.ServerLobby;
+import com.broll.networklib.site.NetworkSite;
+import com.broll.networklib.site.SiteReceiver;
 import com.esotericsoftware.minlog.Log;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import static com.esotericsoftware.minlog.Log.LEVEL_TRACE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -30,6 +35,8 @@ public abstract class NetworkTest<L extends LobbySettings, P extends LobbySettin
     protected TestServer server;
     protected LobbyGameServer<L, P> gameServer;
     protected Map<LobbyGameClient, TestClientData> clients = new HashMap<>();
+    private ExecutorService executor = Executors.newSingleThreadExecutor();
+
 
     protected abstract IRegisterNetwork registerNetwork();
 
@@ -37,8 +44,33 @@ public abstract class NetworkTest<L extends LobbySettings, P extends LobbySettin
     public void before() {
         Log.INFO();
         server = new TestServer(registerNetwork(), TIMEOUT);
+        server.setSiteReceiver(tunneledReceiver());
         gameServer = new LobbyGameServer<>(server, "TestServer");
         registerServerSites(gameServer);
+        gameServer.open();
+    }
+
+    private SiteReceiver tunneledReceiver() {
+        return new SiteReceiver() {
+            @Override
+            public void receive(Object context, NetworkSite site, Method receiver, Object object) {
+                executor.execute(() -> super.receive(context, site, receiver, object));
+            }
+        };
+    }
+
+    protected void sleep() {
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            Assert.fail(e.getMessage());
+        }
+    }
+
+    @After
+    public void after() {
+        clients.keySet().forEach(LobbyGameClient::shutdown);
+        gameServer.shutdown();
     }
 
     public abstract void registerServerSites(LobbyGameServer<L, P> server);
@@ -47,7 +79,7 @@ public abstract class NetworkTest<L extends LobbySettings, P extends LobbySettin
 
     public LobbyGameClient testClient(String name) {
         TestClient testClient = new TestClient(registerNetwork(), TIMEOUT);
-        testClient.connect(server);
+        testClient.setSiteReceiver(tunneledReceiver());
         LobbyGameClient client = new LobbyGameClient(testClient);
         registerClientSites(client);
         TestClientData data = new TestClientData();
@@ -63,18 +95,6 @@ public abstract class NetworkTest<L extends LobbySettings, P extends LobbySettin
         LobbyGameClient client = testClient(name);
         joinLobby(client, lobbyToConnect);
         return client;
-    }
-
-    public void clientSend(LobbyGameClient client, Object o) {
-        clients.get(client).testClient.sendTCP(o);
-    }
-
-    public void serverSend(Object o) {
-        server.sendToAllTCP(o);
-    }
-
-    public void serverSend(LobbyGameClient client, Object o) {
-        server.getConnection(getTestClient(client)).sendTCP(o);
     }
 
     public void dropPackages() {
@@ -94,8 +114,8 @@ public abstract class NetworkTest<L extends LobbySettings, P extends LobbySettin
         return clients.get(client).testClient.assureReceived(type);
     }
 
-    public <T> T assertServerReceived(Class<T> type, LobbyGameClient from) {
-        return server.assureReceived(type, clients.get(from).testClient);
+    public <T> T assertServerReceived(Class<T> type, NetworkConnection from) {
+        return server.assureReceived(type, from);
     }
 
     public TestClient getTestClient(LobbyGameClient client) {
@@ -126,8 +146,10 @@ public abstract class NetworkTest<L extends LobbySettings, P extends LobbySettin
                 client.listLobbies(new ILobbyDiscovery() {
                     @Override
                     public void discovered(String serverIp, String serverName, List<GameLobby> lobbies) {
+                        String name = clients.get(client).playerName;
                         for (GameLobby lobby : lobbies) {
                             if (lobby.getLobbyId() == serverLobby.getId()) {
+                                Log.info("Client " + name + " discovered lobby " + lobby.getName());
                                 task.done(lobby);
                                 return;
                             }
@@ -155,18 +177,20 @@ public abstract class NetworkTest<L extends LobbySettings, P extends LobbySettin
                     client.connectToLobby(lobby, name, new INetworkRequestAttempt<GameLobby>() {
                         @Override
                         public void failure(String reason) {
-                            fail(task, "unable to join lobby");
+                            fail(task, "unable to join lobby " + reason);
                         }
 
                         @Override
                         public void receive(GameLobby response) {
                             //joined lobby
+                            Log.info("Client " + name + " joined lobby " + lobby.getName());
                             task.done(true);
                         }
                     });
                 }
         );
     }
+
 
     private class TestClientData {
         public String playerName;

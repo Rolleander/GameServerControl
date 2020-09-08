@@ -2,10 +2,9 @@ package com.broll.networklib.client.impl;
 
 import com.broll.networklib.PackageReceiver;
 import com.broll.networklib.client.ClientAuthenticationKey;
-import com.broll.networklib.client.ClientSite;
 import com.broll.networklib.client.LobbyClientSite;
-import com.broll.networklib.client.LobbyGameClient;
 import com.broll.networklib.network.INetworkRequestAttempt;
+import com.broll.networklib.network.NetworkException;
 import com.broll.networklib.network.nt.NT_ChatMessage;
 import com.broll.networklib.network.nt.NT_LobbyClosed;
 import com.broll.networklib.network.nt.NT_LobbyCreate;
@@ -17,16 +16,15 @@ import com.broll.networklib.network.nt.NT_LobbyUpdate;
 import com.broll.networklib.network.nt.NT_LobbyKicked;
 
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class LobbyConnectionSite extends LobbyClientSite {
 
-    private INetworkRequestAttempt<GameLobby> request;
+    private CompletableFuture<GameLobby> connectionRequest;
     private GameLobby lobby;
     private Map<Integer, LobbyPlayer> players = new ConcurrentHashMap<>();
     private ILobbyConnectionListener lobbyConnectionListener;
@@ -35,28 +33,38 @@ public class LobbyConnectionSite extends LobbyClientSite {
         this.lobbyConnectionListener = lobbyConnectionListener;
     }
 
-    private synchronized  void initRequest(INetworkRequestAttempt<GameLobby> request, GameLobby lobby) {
+    private synchronized void initRequest(GameLobby lobby) {
         this.lobby = lobby;
-        this.request = request;
+        this.connectionRequest = new CompletableFuture<>();
         this.players.clear();
+        starTimeout();
     }
 
-    public void tryJoinLobby(GameLobby lobby, String playerName, ClientAuthenticationKey secret, INetworkRequestAttempt<GameLobby> request) {
-        initRequest(request, lobby);
+    public CompletableFuture<GameLobby> tryJoinLobby(GameLobby lobby, String playerName, ClientAuthenticationKey secret) {
+        initRequest(lobby);
         NT_LobbyJoin join = new NT_LobbyJoin();
         join.lobbyId = lobby.getLobbyId();
         join.authenticationKey = secret.getSecret();
         join.playerName = playerName;
         client.sendTCP(join);
+        return connectionRequest;
     }
 
-    public void tryCreateLobby(String playerName, Object settings, ClientAuthenticationKey secret, INetworkRequestAttempt<GameLobby> request) {
-        initRequest(request, null);
+    public CompletableFuture<GameLobby> tryCreateLobby(String playerName, Object settings, ClientAuthenticationKey secret) {
+        initRequest(null);
         NT_LobbyCreate create = new NT_LobbyCreate();
         create.playerName = playerName;
         create.authenticationKey = secret.getSecret();
         create.settings = settings;
         client.sendTCP(create);
+        return connectionRequest;
+    }
+
+    private void starTimeout() {
+        TimeoutUtils.scheduleTimeout(connectionRequest, future -> {
+            future.completeExceptionally(new NetworkException("Timeout"));
+            connectionRequest = null;
+        });
     }
 
     public void reconnectedToLobby(GameLobby lobby) {
@@ -66,7 +74,7 @@ public class LobbyConnectionSite extends LobbyClientSite {
     @PackageReceiver
     public void receive(NT_LobbyJoined lobbyJoin) {
         //player could join lobby / create lobby / lobby update
-        if (request != null) {
+        if (connectionRequest != null) {
             if (lobby == null) {
                 //player created lobby, so create client object
                 lobby = new GameLobby();
@@ -88,7 +96,7 @@ public class LobbyConnectionSite extends LobbyClientSite {
         }
     }
 
-    private synchronized void updateLobby(NT_LobbyUpdate lobbyUpdate){
+    private synchronized void updateLobby(NT_LobbyUpdate lobbyUpdate) {
         //update lobby info
         LobbyLookupSite.updateLobbyInfo(lobby, lobbyUpdate);
         updateLobbyPlayers(lobbyUpdate.players);
@@ -122,9 +130,9 @@ public class LobbyConnectionSite extends LobbyClientSite {
     @PackageReceiver
     public void receive(NT_LobbyNoJoin noJoin) {
         //could not join / create lobby
-        if (request != null) {
-            request.failure(noJoin.reason);
-            request = null;
+        if (connectionRequest != null) {
+            connectionRequest.completeExceptionally(new NetworkException(noJoin.reason));
+            connectionRequest = null;
         }
         resetLobby();
     }
@@ -149,8 +157,8 @@ public class LobbyConnectionSite extends LobbyClientSite {
         lobby.setPlayers(players);
         lobby.playerJoined(playerId);
         //first update joins the player, so forward to request
-        request.receive(lobby);
-        request = null;
+        connectionRequest.complete(lobby);
+        connectionRequest = null;
     }
 
     private synchronized void updateLobbyPlayers(NT_LobbyPlayerInfo[] playersInfo) {

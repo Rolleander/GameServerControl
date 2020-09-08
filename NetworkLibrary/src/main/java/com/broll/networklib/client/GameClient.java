@@ -11,6 +11,8 @@ import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.minlog.Log;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.List;
@@ -28,14 +30,22 @@ public class GameClient extends GameEndpoint<ClientSite, GameClient.ClientConnec
     public GameClient(IRegisterNetwork registerNetwork) {
         super(registerNetwork, new SingleSitesHandler<>());
         init();
+        client.addListener(new Listener.ThreadedListener(new ClientListener()));
     }
 
     public void connect(String ip) {
         if (isConnected()) {
+            if (StringUtils.equals(ip, connectedIp)) {
+                return;
+            }
             shutdown();
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Log.error("Failed sleeping", e);
+            }
         }
         try {
-            client.addListener(new Listener.ThreadedListener(new ClientListener()));
             client.start();
             client.connect(CONNECTION_TIMEOUT, ip, NetworkRegistry.TCP_PORT, NetworkRegistry.UDP_PORT);
             Log.info("Client connected to server " + ip);

@@ -41,7 +41,7 @@ public class LobbyLookupSite extends LobbyClientSite {
             lookupClient.register(lookupSite);
             lookupClient.connect(ip);
             //request server info
-            Log.info("connectd to " + lookupClient.getConnectedIp());
+            Log.info("connected to " + lookupClient.getConnectedIp());
             lookupClient.sendTCP(new NT_ServerInformation());
             lookupSite.scheduleTimeout();
         } catch (Exception e) {
@@ -61,15 +61,7 @@ public class LobbyLookupSite extends LobbyClientSite {
     }
 
     private void scheduleTimeout() {
-        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-        executor.schedule(() -> {
-                    if (!discoveryFuture.isDone()) {
-                        Log.warn("Lobby discovery timed out on server " + this.getClient().getConnectedIp());
-                        discoveryFuture.complete(0);
-                    }
-                }
-                , TIMEOUT, TimeUnit.SECONDS);
-        executor.shutdown();
+        TimeoutUtils.scheduleTimeout(discoveryFuture,future->future.complete(0));
     }
 
     @Override

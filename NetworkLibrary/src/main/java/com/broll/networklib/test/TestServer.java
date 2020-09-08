@@ -12,7 +12,6 @@ import java.util.List;
 
 public class TestServer extends GameServer {
 
-    private Map<TestClient, TestConnection> connections = new HashMap<>();
     private List<ReceivedPackage> received = new ArrayList<>();
     private int timeout;
 
@@ -21,31 +20,7 @@ public class TestServer extends GameServer {
         this.timeout = timeout;
     }
 
-    @Override
-    public void open() {
-        //do nothing
-    }
-
-    @Override
-    public void shutdown() {
-        //do nothing
-    }
-
-    void connected(TestClient client) {
-        TestConnection connection = new TestConnection(client);
-        connections.put(client, connection);
-        initConnection(connection);
-        passAllSites(connection, sites -> sites.forEach(site -> site.onConnect(connection)));
-    }
-
-    public void disconnect(TestClient client) {
-        TestConnection connection = connections.get(client);
-        connection.setActive(false);
-        connections.remove(connection);
-        passAllSites(connection, sites -> sites.forEach(site -> site.onDisconnect(connection)));
-    }
-
-    public <T> T assureReceived(Class<T> type, TestClient from) {
+    public <T> T assureReceived(Class<T> type, NetworkConnection from) {
         ReceivedPackage pkg = (ReceivedPackage) TestUtils.poll(received, timeout);
         if (pkg == null) {
             throw new RuntimeException("No message received");
@@ -59,59 +34,23 @@ public class TestServer extends GameServer {
         return (T) pkg.pkg;
     }
 
-    public NetworkConnection getConnection(TestClient client) {
-        return connections.get(client);
-    }
-
     public void dropReceivedPackages() {
         received.clear();
     }
 
-    void receive(TestClient client, Object o) {
-        received(connections.get(client), o);
+    @Override
+    protected void received(NetworkConnection connection, Object o) {
+        super.received(connection, o);
         ReceivedPackage pkg = new ReceivedPackage();
-        pkg.from = client;
+        pkg.from = connection;
         pkg.pkg = o;
         received.add(pkg);
     }
 
-    @Override
-    public void sendToAllTCP(Object object) {
-        connections.values().forEach(con -> con.sendTCP(object));
-    }
-
-    @Override
-    public void sendToAllUDP(Object object) {
-        connections.values().forEach(con -> con.sendUDP(object));
-    }
 
     private class ReceivedPackage {
         public Object pkg;
-        public TestClient from;
+        public NetworkConnection from;
     }
 
-    private class TestConnection extends NetworkConnection {
-        private TestClient client;
-
-        public TestConnection(TestClient client) {
-            this.client = client;
-        }
-
-        @Override
-        public boolean isConnected() {
-            return true;
-        }
-
-        @Override
-        public int sendTCP(Object o) {
-            client.receive(o);
-            return 0;
-        }
-
-        @Override
-        public int sendUDP(Object o) {
-            client.receive(o);
-            return 0;
-        }
-    }
 }

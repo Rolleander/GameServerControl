@@ -8,6 +8,7 @@ import com.broll.networklib.network.nt.NT_LobbyJoin;
 import com.broll.networklib.network.nt.NT_LobbyJoined;
 import com.broll.networklib.network.nt.NT_LobbyNoJoin;
 import com.broll.networklib.network.nt.NT_LobbyKicked;
+import com.broll.networklib.network.nt.NT_LobbyNoReconnect;
 import com.broll.networklib.network.nt.NT_LobbyReconnected;
 import com.broll.networklib.network.nt.NT_ReconnectCheck;
 import com.broll.networklib.network.nt.NT_ServerInformation;
@@ -61,7 +62,7 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
             lobby.playerChangedConnectionStatus(player, true);
         } else {
             //is a new player, cant be reconnected
-            getConnection().sendTCP(new NT_LobbyNoJoin());
+            getConnection().sendTCP(new NT_LobbyNoReconnect());
         }
     }
 

@@ -6,12 +6,10 @@ import com.broll.networklib.server.LobbyGameServer;
 import com.broll.networklib.server.impl.Player;
 import com.broll.networklib.server.impl.ServerLobby;
 import com.broll.networklib.test.NetworkTest;
-import com.esotericsoftware.minlog.Log;
-import com.sun.media.jfxmedia.logging.Logger;
 
 import org.junit.Test;
-import org.testng.annotations.AfterTest;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.assertEquals;
@@ -39,10 +37,9 @@ public class LobbyTests extends NetworkTest {
     @Test
     public void connect() {
         ServerLobby lobby = openGameLobby(null, "TestLobby");
-
         LobbyGameClient peter = testClient("Peter", lobby);
         LobbyGameClient pan = testClient("Pan", lobby);
-
+        sleep();
         assertEquals(2, lobby.getPlayers().size());
         dropPackages();
     }
@@ -52,8 +49,10 @@ public class LobbyTests extends NetworkTest {
         ServerLobby lobby = openGameLobby(null, "TestLobby");
         LobbyGameClient peter = testClient("Peter", lobby);
         LobbyGameClient pan = testClient("Pan", lobby);
+        sleep();
         assertEquals(2, lobby.getPlayers().size());
-        server.disconnect(getTestClient(pan));
+        pan.shutdown();
+        sleep();
         assertEquals(1, lobby.getPlayers().size());
         dropPackages();
     }
@@ -68,6 +67,7 @@ public class LobbyTests extends NetworkTest {
         assertEquals(0, lobby2.getPlayers().size());
         Player serverPeter = (Player) lobby1.getPlayers().iterator().next();
         joinLobby(peter, lobby2);
+        sleep();
         assertEquals(0, lobby1.getPlayers().size());
         assertTrue(lobby1.isClosed());
         assertEquals(1, gameServer.getLobbyHandler().getLobbies().size());
@@ -80,8 +80,10 @@ public class LobbyTests extends NetworkTest {
     public void doubleJoin() {
         ServerLobby lobby = openGameLobby(null, "TestLobby");
         LobbyGameClient peter = testClient("Peter", lobby);
+        sleep();
         assertEquals(1, lobby.getPlayers().size());
         joinLobby(peter, lobby);
+        sleep();
         assertEquals(1, lobby.getPlayers().size());
         dropPackages();
     }
@@ -91,6 +93,7 @@ public class LobbyTests extends NetworkTest {
         ServerLobby lobby = openGameLobby(null, "TestLobby");
         LobbyGameClient peter = testClient("Peter", lobby);
         LobbyGameClient hans = testClient("Hans", lobby);
+        sleep();
         assertEquals(2, lobby.getPlayers().size());
         lobby.kickPlayer(lobby.getPlayer(0));
         assertEquals(1, lobby.getPlayers().size());
@@ -118,7 +121,7 @@ public class LobbyTests extends NetworkTest {
         lobby.setPlayerLimit(1);
         LobbyGameClient peter = testClient("Peter", lobby);
         //client should not be able to join
-        expectFailure(() -> testClient("Pan", lobby), "Operation failed: unable to join lobby");
+        expectFailure(() -> testClient("Pan", lobby), "Operation failed: unable to join lobby com.broll.networklib.network.NetworkException");
         assertEquals(1, lobby.getPlayers().size());
         dropPackages();
     }
@@ -128,15 +131,17 @@ public class LobbyTests extends NetworkTest {
         ServerLobby lobby = openGameLobby(null, "TestLobby");
         LobbyGameClient peter = testClient("Peter", lobby);
         lobby.setLocked(true);
-        server.disconnect(getTestClient(peter));
+        peter.shutdown();
         assertEquals(1, lobby.getPlayers().size());
         assertEquals(false, lobby.getPlayer(0).isOnline());
+
         //another player should not be able to reconnect
         assertFalse(testClient("Hans").checkForReconnection(null, reconLobby -> {
                     assertEquals(lobby.getId(), reconLobby.getLobbyId());
                 }
         ).get().booleanValue());
         //reconnect correct player
+
         peter = testClient("Peter");
         assertTrue(peter.checkForReconnection(null, reconLobby -> {
                     assertEquals(lobby.getId(), reconLobby.getLobbyId());

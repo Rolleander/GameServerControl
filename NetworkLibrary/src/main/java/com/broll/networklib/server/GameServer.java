@@ -47,8 +47,6 @@ public class GameServer extends GameEndpoint<ServerSite, NetworkConnection> {
         }
     }
 
-
-
     @Override
     public void shutdown() {
         server.stop();

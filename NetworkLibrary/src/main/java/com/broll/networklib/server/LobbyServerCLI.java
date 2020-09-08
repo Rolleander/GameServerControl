@@ -39,7 +39,7 @@ public class LobbyServerCLI {
             print("Server has " + lobbies.size() + " lobbies open with " + lobbies.stream().map(ServerLobby::getPlayerCount).reduce(0, Integer::sum) + " total players");
             lobbies.forEach(lobby -> {
                 Collection<Player> players = lobby.getPlayers();
-                print("==> Lobby [" + lobby.getId() + "] " + lobby.getName() + " with " + players.size() + " players: " + players.stream().map(Player::getName).collect(Collectors.joining(",")));
+                print("==> [" + lobby.getId() + "] " + lobby.getName() + " with " + players.size() + " players: " + players.stream().map(Player::getName).collect(Collectors.joining(",")));
             });
         });
     }

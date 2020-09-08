@@ -10,8 +10,9 @@ public class NetworkConnection extends Connection {
 
     private boolean active = true;
 
-    public void setPlayer(Player player){
+    public void setPlayer(Player player) {
         this.player = player;
+        setName("Connection "+getID()+" player ["+player.getName()+"]");
     }
 
     public Player getPlayer() {
@@ -28,7 +29,7 @@ public class NetworkConnection extends Connection {
 
     @Override
     public int sendTCP(Object o) {
-        Log.info("Server send "+o+" to "+this);
+        Log.info("Server send " + o + " to " + this);
         return super.sendTCP(o);
     }
 }

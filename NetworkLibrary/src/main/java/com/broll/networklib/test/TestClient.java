@@ -9,36 +9,12 @@ import com.google.common.util.concurrent.SettableFuture;
 
 public class TestClient extends GameClient {
 
-    private TestServer server;
     private List<Object> receivedObjects = new ArrayList<>();
     private int timeout;
-    private boolean connected = false;
 
     public TestClient(IRegisterNetwork registerNetwork, int timeout) {
         super(registerNetwork);
         this.timeout = timeout;
-    }
-
-    @Override
-    public void connect(String ip) {
-        //do nothing
-    }
-
-    @Override
-    public void shutdown() {
-        //do nothing
-        disconnect(server);
-    }
-
-    public void connect(TestServer server) {
-        this.server = server;
-        this.connected = true;
-
-        server.connected(this);
-    }
-
-    public void disconnect(TestServer server) {
-        server.disconnect(this);
     }
 
     public void dropReceivedPackages() {
@@ -57,22 +33,8 @@ public class TestClient extends GameClient {
     }
 
     @Override
-    public boolean isConnected() {
-        return connected;
-    }
-
-    @Override
-    public void sendTCP(Object object) {
-        server.receive(this, object);
-    }
-
-    @Override
-    public void sendUDP(Object object) {
-        server.receive(this, object);
-    }
-
-    void receive(Object object) {
-        this.received(object);
-        receivedObjects.add(object);
+    protected void received(Object o) {
+        super.received(o);
+        receivedObjects.add(o);
     }
 }

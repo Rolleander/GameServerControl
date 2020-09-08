@@ -8,6 +8,7 @@ import com.broll.networklib.client.LobbyClientSite;
 import com.broll.networklib.network.IRegisterNetwork;
 import com.broll.networklib.network.nt.NT_LobbyJoined;
 import com.broll.networklib.network.nt.NT_LobbyNoJoin;
+import com.broll.networklib.network.nt.NT_LobbyNoReconnect;
 import com.broll.networklib.network.nt.NT_LobbyReconnected;
 import com.broll.networklib.network.nt.NT_ReconnectCheck;
 import com.esotericsoftware.minlog.Log;
@@ -26,7 +27,6 @@ public class LobbyReconnectSite extends LobbyClientSite {
 
     private CompletableFuture<Boolean> discoveryFuture;
 
-    private final static int TIMEOUT = 5;
 
     public LobbyReconnectSite(ILobbyReconnect reconnectCheck) {
         this.reconnectCheck = reconnectCheck;
@@ -40,27 +40,19 @@ public class LobbyReconnectSite extends LobbyClientSite {
         reconnect.authenticationKey = authenticationKey.getSecret();
         client.connect(ip);
         client.sendTCP(reconnect);
-        lookupSite.scheduleTimeout();
-        return lookupSite.discoveryFuture.whenComplete((r, t) -> client.unregister(lookupSite));
-    }
-
-    private void scheduleTimeout() {
-        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-        executor.schedule(() -> {
-                    if (!discoveryFuture.isDone()) {
-                        Log.warn("Reconnect check timed out on server " + this.getClient().getConnectedIp());
-                        discoveryFuture.complete(false);
-                    }
-                }
-                , TIMEOUT, TimeUnit.SECONDS);
-        executor.shutdown();
+        TimeoutUtils.scheduleTimeout(lookupSite.discoveryFuture, future -> future.complete(false));
+        return lookupSite.discoveryFuture.whenComplete((r, t) -> {
+            client.unregister(lookupSite);
+            if (!r.booleanValue()) {
+                client.shutdown();
+            }
+        });
     }
 
     @Override
     public void onDisconnect() {
         if (!discoveryFuture.isDone()) {
             Log.warn("Reconnect check client disconnected");
-            discoveryFuture.complete(false);
         }
     }
 
@@ -83,7 +75,7 @@ public class LobbyReconnectSite extends LobbyClientSite {
     }
 
     @PackageReceiver
-    public void notReconnected(NT_LobbyNoJoin notReconnected) {
+    public void notReconnected(NT_LobbyNoReconnect notReconnected) {
         discoveryFuture.complete(false);
     }
 }

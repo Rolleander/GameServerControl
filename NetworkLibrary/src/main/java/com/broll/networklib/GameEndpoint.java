@@ -7,6 +7,7 @@ import com.broll.networklib.site.AbstractSitesHandler;
 import com.broll.networklib.site.NetworkSite;
 import com.broll.networklib.site.ReceivingSites;
 import com.broll.networklib.site.SiteReceiver;
+import com.broll.networklib.site.UnknownMessageReceiver;
 import com.esotericsoftware.minlog.Log;
 
 import java.util.Arrays;
@@ -45,7 +46,7 @@ public abstract class GameEndpoint<T extends NetworkSite, C> implements NetworkR
         getKryo().register(type);
     }
 
-    public Map<Class<T>, T> getSiteInstances(C context){
+    public Map<Class<T>, T> getSiteInstances(C context) {
         return sites.getSiteInstances(context);
     }
 
@@ -60,6 +61,10 @@ public abstract class GameEndpoint<T extends NetworkSite, C> implements NetworkR
 
     protected void discardConnection(C connectionContext) {
         sites.discardConnection(connectionContext);
+    }
+
+    public void setUnknownMessageReceiver(UnknownMessageReceiver receiver) {
+        sites.setUnknownMessageReceiver(receiver);
     }
 
     protected void passAllSites(C connectionContext, ReceivingSites<T> receivers) {
@@ -81,12 +86,16 @@ public abstract class GameEndpoint<T extends NetworkSite, C> implements NetworkR
         Arrays.asList(sites).forEach(site -> this.sites.remove(site));
     }
 
-    public static void attemptRequest(INetworkRequestAttempt request, Runnable attempt) {
+    public static void attemptRequest(INetworkRequestAttempt request, AttemptRunnable attempt) {
         try {
             attempt.run();
         } catch (Exception e) {
             request.failure(e.getMessage());
         }
+    }
+
+    public interface AttemptRunnable {
+        void run() throws Exception;
     }
 
     public abstract void shutdown();

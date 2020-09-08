@@ -120,7 +120,7 @@ public class LobbyGameClient implements NetworkRegister {
     public void connectToLobby(GameLobby lobby, String playerName, INetworkRequestAttempt<GameLobby> request) {
         GameEndpoint.attemptRequest(request, () -> {
             client.connect(lobby.getServerIp());
-            lobbyConnectionSite.tryJoinLobby(lobby, playerName, clientAuthenticationKey, request);
+            request.receive(lobbyConnectionSite.tryJoinLobby(lobby, playerName, clientAuthenticationKey).get());
         });
     }
 
@@ -191,7 +191,8 @@ public class LobbyGameClient implements NetworkRegister {
             throw new NetworkException("Cannot create lobby when not connected to a server");
         }
         GameEndpoint.attemptRequest(request, () -> {
-            lobbyConnectionSite.tryCreateLobby(playerName, settings, ClientAuthenticationKey.fromFileCache(), request);
+            request.receive(lobbyConnectionSite.tryCreateLobby(playerName, settings, ClientAuthenticationKey.fromFileCache())
+                    .get());
         });
     }
 
