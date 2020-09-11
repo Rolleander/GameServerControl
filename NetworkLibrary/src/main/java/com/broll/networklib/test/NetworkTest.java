@@ -1,10 +1,8 @@
 package com.broll.networklib.test;
 
-import com.broll.networklib.client.ClientAuthenticationKey;
+import com.broll.networklib.client.auth.ClientAuthenticationKey;
 import com.broll.networklib.client.LobbyGameClient;
 import com.broll.networklib.client.impl.GameLobby;
-import com.broll.networklib.client.impl.ILobbyDiscovery;
-import com.broll.networklib.network.INetworkRequestAttempt;
 import com.broll.networklib.network.IRegisterNetwork;
 import com.broll.networklib.server.LobbyGameServer;
 import com.broll.networklib.server.NetworkConnection;
@@ -20,8 +18,10 @@ import org.junit.Before;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -36,7 +36,6 @@ public abstract class NetworkTest<L extends LobbySettings, P extends LobbySettin
     protected LobbyGameServer<L, P> gameServer;
     protected Map<LobbyGameClient, TestClientData> clients = new HashMap<>();
     private ExecutorService executor = Executors.newSingleThreadExecutor();
-
 
     protected abstract IRegisterNetwork registerNetwork();
 
@@ -133,64 +132,36 @@ public abstract class NetworkTest<L extends LobbySettings, P extends LobbySettin
             runnable.run();
             Assert.fail("Expected failure: " + failure);
         } catch (RuntimeException e) {
-            Assert.assertEquals("java.util.concurrent.ExecutionException: java.lang.RuntimeException: " + failure, e.getMessage());
+            Assert.assertEquals(failure, e.getMessage());
         }
     }
 
-    private void fail(AsyncTaskCallback task, String reason) {
-        task.failed(new RuntimeException("Operation failed: " + reason));
+    protected <T> T waitFor(CompletableFuture<T> future) {
+        try {
+            return future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void joinLobby(LobbyGameClient client, ServerLobby serverLobby) {
-        GameLobby lobby = AsyncTask.doAsync(task ->
-                client.listLobbies(new ILobbyDiscovery() {
-                    @Override
-                    public void discovered(String serverIp, String serverName, List<GameLobby> lobbies) {
-                        String name = clients.get(client).playerName;
-                        for (GameLobby lobby : lobbies) {
-                            if (lobby.getLobbyId() == serverLobby.getId()) {
-                                Log.info("Client " + name + " discovered lobby " + lobby.getName());
-                                task.done(lobby);
-                                return;
-                            }
-                        }
-                        fail(task, "lobby not found");
-                    }
-
-                    @Override
-                    public void noLobbiesDiscovered() {
-                        fail(task, "no lobbies discovered");
-                    }
-
-                    @Override
-                    public void discoveryDone() {
-
-                    }
-                })
-        );
-        connectToLobby(client, lobby);
+        String name = clients.get(client).playerName;
+        Optional<GameLobby> lobbyOptional = waitFor(client.listLobbies()).getLobbies().stream().filter(lobby -> lobby.getLobbyId() == serverLobby.getId()).findFirst();
+        if(lobbyOptional.isPresent()){
+            GameLobby lobby = lobbyOptional.get();
+            Log.info("Client " + name + " discovered lobby " + lobby.getName());
+            connectToLobby(client, lobby);
+        }
+        else{
+            throw new RuntimeException("Lobby not found");
+        }
     }
 
     private void connectToLobby(LobbyGameClient client, GameLobby lobby) {
-        AsyncTask.doAsync(task -> {
-                    String name = clients.get(client).playerName;
-                    client.connectToLobby(lobby, name, new INetworkRequestAttempt<GameLobby>() {
-                        @Override
-                        public void failure(String reason) {
-                            fail(task, "unable to join lobby " + reason);
-                        }
-
-                        @Override
-                        public void receive(GameLobby response) {
-                            //joined lobby
-                            Log.info("Client " + name + " joined lobby " + lobby.getName());
-                            task.done(true);
-                        }
-                    });
-                }
-        );
+        String name = clients.get(client).playerName;
+        waitFor(client.joinLobby(lobby, name));
+        Log.info("Client " + name + " joined lobby " + lobby.getName());
     }
-
 
     private class TestClientData {
         public String playerName;

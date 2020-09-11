@@ -25,7 +25,7 @@ public class GameLobby {
 
     private boolean playerJoined = false;
 
-    private Map<Integer, LobbyPlayer> players;
+    private Map<Integer, LobbyPlayer> players = new HashMap<>();
 
     private ChatMessageListener chatMessageListener;
 
@@ -63,10 +63,6 @@ public class GameLobby {
 
     ChatMessageListener getChatMessageListener() {
         return chatMessageListener;
-    }
-
-    void setPlayers(Map<Integer, LobbyPlayer> players) {
-        this.players = players;
     }
 
     public List<LobbyPlayer> getPlayers() {
@@ -137,5 +133,9 @@ public class GameLobby {
 
     public int getPlayerId() {
         return playerId;
+    }
+
+    Map<Integer, LobbyPlayer> getPlayerMap() {
+        return players;
     }
 }

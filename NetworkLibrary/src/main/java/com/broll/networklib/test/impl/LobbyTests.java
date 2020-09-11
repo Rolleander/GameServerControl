@@ -1,6 +1,7 @@
 package com.broll.networklib.test.impl;
 
 import com.broll.networklib.client.LobbyGameClient;
+import com.broll.networklib.client.impl.GameLobby;
 import com.broll.networklib.network.IRegisterNetwork;
 import com.broll.networklib.server.LobbyGameServer;
 import com.broll.networklib.server.impl.Player;
@@ -9,7 +10,6 @@ import com.broll.networklib.test.NetworkTest;
 
 import org.junit.Test;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.assertEquals;
@@ -106,7 +106,7 @@ public class LobbyTests extends NetworkTest {
         LobbyGameClient peter = testClient("Peter", lobby);
         lobby.setLocked(true);
         //client should not find locked lobby
-        expectFailure(() -> testClient("Pan", lobby), "Operation failed: lobby not found");
+        expectFailure(() -> testClient("Pan", lobby), "Lobby not found");
         assertEquals(1, lobby.getPlayers().size());
         //unlock and try again joining
         lobby.setLocked(false);
@@ -121,7 +121,7 @@ public class LobbyTests extends NetworkTest {
         lobby.setPlayerLimit(1);
         LobbyGameClient peter = testClient("Peter", lobby);
         //client should not be able to join
-        expectFailure(() -> testClient("Pan", lobby), "Operation failed: unable to join lobby com.broll.networklib.network.NetworkException");
+        expectFailure(() -> testClient("Pan", lobby), "java.util.concurrent.ExecutionException: com.broll.networklib.network.NetworkException: java.util.concurrent.ExecutionException: java.lang.Exception: Could not join lobby: null");
         assertEquals(1, lobby.getPlayers().size());
         dropPackages();
     }
@@ -136,21 +136,16 @@ public class LobbyTests extends NetworkTest {
         assertEquals(false, lobby.getPlayer(0).isOnline());
 
         //another player should not be able to reconnect
-        assertFalse(testClient("Hans").checkForReconnection(null, reconLobby -> {
-                    assertEquals(lobby.getId(), reconLobby.getLobbyId());
-                }
-        ).get().booleanValue());
+        expectFailure(() -> waitFor(testClient("Hans").reconnectCheck("localhost")),
+                "java.util.concurrent.ExecutionException: com.broll.networklib.network.NetworkException: java.util.concurrent.ExecutionException: java.lang.Exception: Could not reconnect player");
         //reconnect correct player
-
         peter = testClient("Peter");
-        assertTrue(peter.checkForReconnection(null, reconLobby -> {
-                    assertEquals(lobby.getId(), reconLobby.getLobbyId());
-                }
-        ).get().booleanValue());
+
+        GameLobby gameLobby = (GameLobby) waitFor(peter.reconnectCheck("localhost"));
+        assertEquals(lobby.getId(), gameLobby.getLobbyId());
         assertEquals(1, lobby.getPlayers().size());
         assertEquals(true, lobby.getPlayer(0).isOnline());
         dropPackages();
     }
-
 
 }

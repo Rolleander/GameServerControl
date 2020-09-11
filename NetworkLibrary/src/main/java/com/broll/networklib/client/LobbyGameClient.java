@@ -1,47 +1,35 @@
 package com.broll.networklib.client;
 
-import com.broll.networklib.GameEndpoint;
 import com.broll.networklib.NetworkRegister;
+import com.broll.networklib.client.auth.ClientAuthenticationKey;
+import com.broll.networklib.client.auth.LastConnection;
 import com.broll.networklib.client.impl.GameLobby;
-import com.broll.networklib.client.impl.ILobbyConnectionListener;
-import com.broll.networklib.client.impl.ILobbyDiscovery;
-import com.broll.networklib.client.impl.ILobbyReconnect;
 import com.broll.networklib.client.impl.LobbyConnectionSite;
-import com.broll.networklib.client.impl.LobbyLookupSite;
-import com.broll.networklib.client.impl.LobbyReconnectSite;
+import com.broll.networklib.client.tasks.AbstractClientTask;
+import com.broll.networklib.client.tasks.DiscoveredLobbies;
+import com.broll.networklib.client.tasks.impl.CreateLobbyTask;
+import com.broll.networklib.client.tasks.impl.JoinLobbyTask;
+import com.broll.networklib.client.tasks.impl.LobbyDiscoveryTask;
+import com.broll.networklib.client.tasks.impl.LobbyListTask;
+import com.broll.networklib.client.tasks.impl.ReconnectTask;
 import com.broll.networklib.network.IRegisterNetwork;
 import com.broll.networklib.network.NetworkException;
-import com.broll.networklib.network.INetworkRequestAttempt;
 import com.broll.networklib.site.SiteReceiver;
 import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.minlog.Log;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.function.Supplier;
 
 public class LobbyGameClient implements NetworkRegister {
 
-    private ExecutorService discoveryExecutor;
+    private ExecutorService taskExecutor;
     private GameClient client;
-    private LobbyConnectionSite lobbyConnectionSite = new LobbyConnectionSite(new ILobbyConnectionListener() {
-        @Override
-        public void lobbyJoined(GameLobby lobby) {
-            connectedLobby = lobby;
-        }
-
-        @Override
-        public void leftLobby() {
-            connectedLobby = null;
-        }
-    });
+    private LobbyConnectionSite lobbyConnectionSite = new LobbyConnectionSite(() -> connectedLobby = null);
     private ClientAuthenticationKey clientAuthenticationKey = ClientAuthenticationKey.fromFileCache();
-    private boolean discoveringLobbies = false;
     private GameLobby connectedLobby;
 
     public LobbyGameClient(IRegisterNetwork registerNetwork) {
@@ -49,7 +37,7 @@ public class LobbyGameClient implements NetworkRegister {
     }
 
     public LobbyGameClient(GameClient client) {
-        discoveryExecutor = Executors.newSingleThreadExecutor();
+        taskExecutor = Executors.newSingleThreadExecutor();
         this.client = client;
         register(lobbyConnectionSite);
     }
@@ -67,10 +55,6 @@ public class LobbyGameClient implements NetworkRegister {
         return client.getKryo();
     }
 
-    public void connectToServer(String ip) {
-        client.connect(ip);
-    }
-
     @Override
     public void registerNetworkPackage(String packagePath) {
         client.registerNetworkPackage(packagePath);
@@ -86,114 +70,63 @@ public class LobbyGameClient implements NetworkRegister {
         Arrays.stream(sites).forEach(site -> site.init(this));
     }
 
-    public Future<Integer> discoverLobbies(ILobbyDiscovery lobbyDiscovery) {
-        return discoveryTask(false, () -> {
-            List<String> servers = client.discoverServers();
-            //also check localhost for servers
-            servers.add("localhost");
-            //lookup lobbies in each server
-            if (servers.isEmpty()) {
-                lobbyDiscovery.noLobbiesDiscovered();
-                return 0;
-            }
-            int foundLobbies = servers.stream().map(server -> {
-                try {
-                    return LobbyLookupSite.openLobbyLookupClient(server, client.getRegisterNetwork(), lobbyDiscovery).get();
-                } catch (InterruptedException | ExecutionException e) {
-                    Log.error("Interrupted discovery future", e);
-                    return 0;
-                }
-            }).reduce(0, (a, b) -> a + b);
-            if (foundLobbies == 0) {
-                lobbyDiscovery.noLobbiesDiscovered();
-            } else {
-                lobbyDiscovery.discoveryDone();
-            }
-            return foundLobbies;
+    public void unregister(LobbyClientSite... sites) {
+        client.unregister(sites);
+    }
+
+    private <T> CompletableFuture<T> runTask(AbstractClientTask<T> task) {
+        return CompletableFuture.supplyAsync(() ->
+                        task.run(this, client.getRegisterNetwork())
+                , taskExecutor).thenCompose(f -> f);
+    }
+
+    private CompletableFuture<GameLobby> updateLobby(CompletableFuture<GameLobby> future) {
+        return future.whenComplete((lobby, e) -> {
+            this.connectedLobby = lobby;
+            this.lobbyConnectionSite.setLobby(lobby);
         });
+    }
+
+    public CompletableFuture<GameLobby> reconnectCheck() {
+        String ip = LastConnection.getLastConnection();
+        if (ip == null) {
+            CompletableFuture<GameLobby> future = new CompletableFuture<>();
+            future.completeExceptionally(new Exception("Last connection is not set"));
+            return future;
+        }
+        return reconnectCheck(ip);
+    }
+
+    public CompletableFuture<GameLobby> reconnectCheck(String ip) {
+        return updateLobby(runTask(new ReconnectTask(ip, clientAuthenticationKey)));
+    }
+
+    public CompletableFuture<List<DiscoveredLobbies>> discoverLobbies() {
+        return runTask(new LobbyDiscoveryTask(client));
+    }
+
+    public CompletableFuture<DiscoveredLobbies> listLobbies(String ip) {
+        return runTask(new LobbyListTask(ip));
+    }
+
+    public CompletableFuture<DiscoveredLobbies> listLobbies() {
+        return runTask(new LobbyListTask());
+    }
+
+    public CompletableFuture<GameLobby> joinLobby(GameLobby lobby, String playerName) {
+        return updateLobby(runTask(new JoinLobbyTask(lobby, playerName, clientAuthenticationKey)));
+    }
+
+    public CompletableFuture<GameLobby> createLobby(String playerName, Object lobbySettings) {
+        return updateLobby(runTask(new CreateLobbyTask(playerName, lobbySettings, clientAuthenticationKey)));
+    }
+
+    public void clearLastConnection() {
+        LastConnection.clear();
     }
 
     public void clearClientAuthenticationKey() {
         ClientAuthenticationKey.clearFileCache();
-    }
-
-    public void connectToLobby(GameLobby lobby, String playerName, INetworkRequestAttempt<GameLobby> request) {
-        GameEndpoint.attemptRequest(request, () -> {
-            client.connect(lobby.getServerIp());
-            request.receive(lobbyConnectionSite.tryJoinLobby(lobby, playerName, clientAuthenticationKey).get());
-        });
-    }
-
-    public Future<Integer> listLobbies(String ip, ILobbyDiscovery lobbyDiscovery) {
-        return discoveryTask(false, () -> {
-            try {
-                int discoveredLobbies = LobbyLookupSite.openLobbyLookupClient(ip, client.getRegisterNetwork(), lobbyDiscovery).get();
-                if (discoveredLobbies == 0) {
-                    lobbyDiscovery.noLobbiesDiscovered();
-                } else {
-                    lobbyDiscovery.discoveryDone();
-                }
-                return discoveredLobbies;
-            } catch (InterruptedException | ExecutionException e) {
-                Log.error("Interrupted discovery future", e);
-                lobbyDiscovery.noLobbiesDiscovered();
-            }
-            return 0;
-        });
-    }
-
-    public Future<Integer> listLobbies(ILobbyDiscovery lobbyDiscovery) {
-        return discoveryTask(true, () -> {
-            try {
-                int discoveredLobbies = LobbyLookupSite.lookupLobbies(client, lobbyDiscovery).get();
-                if (discoveredLobbies == 0) {
-                    lobbyDiscovery.noLobbiesDiscovered();
-                } else {
-                    lobbyDiscovery.discoveryDone();
-                }
-                return discoveredLobbies;
-            } catch (InterruptedException | ExecutionException e) {
-                Log.error("Interrupted discovery future", e);
-                lobbyDiscovery.noLobbiesDiscovered();
-            }
-            return 0;
-        });
-    }
-
-    public Future<Boolean> checkForReconnection(String ip, ILobbyReconnect reconnect) {
-        return discoveryTask(false, () -> {
-            try {
-                return LobbyReconnectSite.checkForReconnect(ip, client, clientAuthenticationKey, lobby -> {
-                    lobbyConnectionSite.reconnectedToLobby(lobby);
-                    reconnect.reconnected(lobby);
-                }).get();
-            } catch (Exception e) {
-                Log.error("Interrupted reconnect future", e);
-                return false;
-            }
-        });
-    }
-
-    private synchronized <T> Future<T> discoveryTask(boolean clientMustBeConnected, Supplier<T> task) {
-        if (discoveringLobbies) {
-            Log.error("Client ist already busy with a discovery task");
-            return CompletableFuture.completedFuture(null);
-        }
-        discoveringLobbies = true;
-        if (clientMustBeConnected && !client.isConnected()) {
-            throw new NetworkException("Client must be connected to a server before calling this");
-        }
-        return CompletableFuture.supplyAsync(task, discoveryExecutor).whenComplete((o, f) -> discoveringLobbies = false);
-    }
-
-    public void createLobby(String playerName, Object settings, INetworkRequestAttempt<GameLobby> request) {
-        if (!client.isConnected()) {
-            throw new NetworkException("Cannot create lobby when not connected to a server");
-        }
-        GameEndpoint.attemptRequest(request, () -> {
-            request.receive(lobbyConnectionSite.tryCreateLobby(playerName, settings, ClientAuthenticationKey.fromFileCache())
-                    .get());
-        });
     }
 
     public GameLobby getConnectedLobby() {
@@ -204,10 +137,21 @@ public class LobbyGameClient implements NetworkRegister {
         return connectedLobby != null;
     }
 
+    public boolean isConnected() {
+        return client.isConnected();
+    }
+
+    public String getConnectedIp() {
+        return client.getConnectedIp();
+    }
+
     public void shutdown() {
-        discoveryExecutor.shutdown();
+        taskExecutor.shutdown();
         client.shutdown();
     }
 
+    public void connectToServer(String ip) {
+        client.connect(ip);
+    }
 }
 
