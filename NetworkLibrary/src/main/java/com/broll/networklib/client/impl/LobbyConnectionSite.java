@@ -68,6 +68,15 @@ public class LobbyConnectionSite extends LobbyClientSite {
         resetLobby();
     }
 
+    @Override
+    public void onDisconnect() {
+        //lost connection to server
+        if (lobby != null && lobby.getLobbyUpdateListener() != null) {
+            lobby.getLobbyUpdateListener().disconnected();
+        }
+        resetLobby();
+    }
+
     private synchronized void resetLobby() {
         clearLobby.run();
         lobby = null;

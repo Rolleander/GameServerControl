@@ -11,4 +11,6 @@ public interface LobbyUpdateListener {
     void kickedFromLobby();
 
     void closed();
+
+    void disconnected();
 }
