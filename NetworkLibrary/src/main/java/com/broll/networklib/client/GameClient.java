@@ -47,7 +47,7 @@ public class GameClient extends GameEndpoint<ClientSite, GameClient.ClientConnec
         }
         try {
             client.start();
-            client.connect(CONNECTION_TIMEOUT, ip, NetworkRegistry.TCP_PORT, NetworkRegistry.UDP_PORT);
+            client.connect(CONNECTION_TIMEOUT, ip, NetworkRegistry.TCP_PORT);
             Log.info("Client connected to server " + ip);
         } catch (IOException e) {
             throw new NetworkException("Failed to connect with server " + ip, e);

@@ -39,7 +39,7 @@ public class GameServer extends GameEndpoint<ServerSite, NetworkConnection> {
         server.addListener(new Listener.ThreadedListener(new ConnectionListener()));
         server.start();
         try {
-            server.bind(NetworkRegistry.TCP_PORT, NetworkRegistry.UDP_PORT);
+            server.bind(NetworkRegistry.TCP_PORT);
             Log.info("Server started");
             open = true;
         } catch (IOException e) {
