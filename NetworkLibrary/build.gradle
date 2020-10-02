@@ -23,8 +23,7 @@ dependencies {
     // api 'com.broll.networklib'
     // https://mvnrepository.com/artifact/kryonet/kryonet-all
     compile group: 'com.esotericsoftware.minlog', name: 'minlog', version: '1.2'
-    compile group: 'kryonet', name: 'kryonet-all', version: '2.21'
-
+    compile group: 'com.esotericsoftware', name: 'kryonet', version: '2.22.0-RC1'
     implementation("com.google.guava:guava:28.2-jre")
 
     implementation "com.dorkbox:Annotations:2.14"
