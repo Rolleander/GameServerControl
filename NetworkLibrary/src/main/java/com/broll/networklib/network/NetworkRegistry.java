@@ -6,10 +6,14 @@ import com.broll.networklib.network.nt.NT_LobbyPlayerInfo;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.serializers.MapSerializer;
 import com.esotericsoftware.minlog.Log;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.ClassPath;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 public final class NetworkRegistry {
 
@@ -40,8 +44,10 @@ public final class NetworkRegistry {
     public static void register(Kryo kryo, String packagePath) {
         try {
             ClassPath cp = ClassPath.from(NetworkRegistry.class.getClassLoader());
-            cp.getTopLevelClasses(packagePath).forEach(clazz -> {
-                Class<?> loadedClass = clazz.load();
+            List<Class> classes = new ArrayList<>();
+            cp.getTopLevelClasses(packagePath).forEach(c->classes.add(c.load()));
+            Collections.sort(classes,(c1,c2)->c1.getName().compareTo(c2.getName()));
+            classes.forEach(loadedClass->{
                 Log.trace("Register " + loadedClass);
                 kryo.register(loadedClass);
             });
