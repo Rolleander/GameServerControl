@@ -64,7 +64,11 @@ public class GameClient extends GameEndpoint<ClientSite, GameClient.ClientConnec
 
     @Override
     public void shutdown() {
-        client.stop();
+        try {
+            client.dispose();
+        } catch (IOException e) {
+            Log.error("Failed to shutdwon client",e);
+        }
     }
 
     @Override
