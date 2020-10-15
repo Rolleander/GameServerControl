@@ -26,10 +26,4 @@ public class NetworkConnection extends Connection {
     public boolean isActive() {
         return active;
     }
-
-    @Override
-    public int sendTCP(Object o) {
-        Log.info("Server send " + o + " to " + this);
-        return super.sendTCP(o);
-    }
 }

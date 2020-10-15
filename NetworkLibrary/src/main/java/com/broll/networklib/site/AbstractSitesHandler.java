@@ -45,6 +45,13 @@ public abstract class AbstractSitesHandler<T extends NetworkSite, C> {
         this.unknownMessageReceiver = unknownMessageReceiver;
     }
 
+    public void clear(){
+        siteModificationLock.writeLock().lock();
+        this.sites.clear();
+        this.siteRoutes.clear();
+        siteModificationLock.writeLock().unlock();
+    }
+
     public final void add(T site) {
         siteModificationLock.writeLock().lock();
         putSite(site);

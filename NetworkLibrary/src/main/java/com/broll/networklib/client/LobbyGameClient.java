@@ -74,6 +74,10 @@ public class LobbyGameClient implements NetworkRegister {
         client.unregister(sites);
     }
 
+    public void clearSites(){
+        client.clearSites();
+    }
+
     private <T> CompletableFuture<T> runTask(AbstractClientTask<T> task) {
         return CompletableFuture.supplyAsync(() ->
                         task.run(this, client.getRegisterNetwork())
@@ -91,7 +95,7 @@ public class LobbyGameClient implements NetworkRegister {
         String ip = LastConnection.getLastConnection();
         if (ip == null) {
             CompletableFuture<GameLobby> future = new CompletableFuture<>();
-            future.completeExceptionally(new Exception("Last connection is not set"));
+            future.complete(null);
             return future;
         }
         return reconnectCheck(ip);

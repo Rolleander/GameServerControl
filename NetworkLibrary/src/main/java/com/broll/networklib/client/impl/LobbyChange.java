@@ -1,5 +1,6 @@
 package com.broll.networklib.client.impl;
 
+import com.broll.networklib.client.GameClient;
 import com.broll.networklib.client.auth.LastConnection;
 import com.broll.networklib.network.nt.NT_LobbyInformation;
 import com.broll.networklib.network.nt.NT_LobbyJoined;
@@ -8,16 +9,15 @@ import com.broll.networklib.network.nt.NT_LobbyReconnected;
 import com.broll.networklib.network.nt.NT_LobbyUpdate;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public final class LobbyChange {
 
-    public static GameLobby createdLobby(NT_LobbyJoined lobbyJoin) {
+    public static GameLobby createdLobby(GameClient client, NT_LobbyJoined lobbyJoin) {
         GameLobby lobby = new GameLobby();
-        joinedLobby(lobby, lobbyJoin);
+        joinedLobby(client, lobby, lobbyJoin);
         return lobby;
     }
 
@@ -28,7 +28,8 @@ public final class LobbyChange {
         return lobby;
     }
 
-    public static void joinedLobby(GameLobby lobby, NT_LobbyJoined lobbyJoin) {
+    public static void joinedLobby(GameClient client, GameLobby lobby, NT_LobbyJoined lobbyJoin) {
+        lobby.initClient(client);
         updateLobby(lobby, lobbyJoin);
         lobby.playerJoined(lobbyJoin.playerId);
         LastConnection.setLastConnection(lobby.getServerIp());

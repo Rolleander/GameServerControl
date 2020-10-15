@@ -47,7 +47,7 @@ public class GameClient extends GameEndpoint<ClientSite, GameClient.ClientConnec
         }
         try {
             client.start();
-            client.connect(CONNECTION_TIMEOUT, ip, NetworkRegistry.TCP_PORT);
+            client.connect(CONNECTION_TIMEOUT, ip, NetworkRegistry.TCP_PORT, NetworkRegistry.UDP_PORT);
             Log.info("Client connected to server " + ip);
         } catch (IOException e) {
             throw new NetworkException("Failed to connect with server " + ip, e);
@@ -65,6 +65,7 @@ public class GameClient extends GameEndpoint<ClientSite, GameClient.ClientConnec
     @Override
     public void shutdown() {
         try {
+            client.stop();
             client.dispose();
         } catch (IOException e) {
             Log.error("Failed to shutdwon client",e);
@@ -77,7 +78,6 @@ public class GameClient extends GameEndpoint<ClientSite, GameClient.ClientConnec
     }
 
     public void sendTCP(Object object) {
-        Log.info("Client send " + object);
         client.sendTCP(object);
     }
 
@@ -111,7 +111,6 @@ public class GameClient extends GameEndpoint<ClientSite, GameClient.ClientConnec
     }
 
     protected void received(Object o) {
-        Log.info("Client received " + o);
         passReceived(connection, o, sites -> sites.forEach(site -> site.receive(o)));
     }
 

@@ -1,6 +1,8 @@
 package com.broll.networklib.client.impl;
 
 import com.broll.networklib.client.GameClient;
+import com.broll.networklib.network.NetworkException;
+import com.broll.networklib.network.nt.NT_ChatMessage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,8 +35,37 @@ public class GameLobby {
 
     private Object settings;
 
+    private GameClient client;
+
     GameLobby() {
         super();
+    }
+
+
+    void initClient(GameClient client) {
+        this.client = client;
+    }
+
+    private void assureConnected() {
+        if (client == null) {
+            throw new NetworkException("Cannot send to unconnected lobby");
+        }
+    }
+
+    public void sendChat(String message) {
+        NT_ChatMessage chat = new NT_ChatMessage();
+        chat.message = message;
+        sendTCP(chat);
+    }
+
+    public void sendTCP(Object object) {
+        assureConnected();
+        client.sendTCP(object);
+    }
+
+    public void sendUDP(Object object) {
+        assureConnected();
+        client.sendUDP(object);
     }
 
     public Optional<LobbyPlayer> getPlayer(String name) {
@@ -138,4 +169,5 @@ public class GameLobby {
     Map<Integer, LobbyPlayer> getPlayerMap() {
         return players;
     }
+
 }

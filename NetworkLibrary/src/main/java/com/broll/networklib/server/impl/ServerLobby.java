@@ -213,6 +213,7 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
     void sendLobbyJoinUpdate(Player<P> joinedPlayer) {
         NT_LobbyUpdate update = new NT_LobbyUpdate();
         NT_LobbyJoined joined = new NT_LobbyJoined();
+        joined.playerId = joinedPlayer.getId();
         fillLobbyUpdate(update);
         fillLobbyUpdate(joined);
         getPlayers().forEach(p -> {

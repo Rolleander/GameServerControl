@@ -75,6 +75,10 @@ public abstract class GameEndpoint<T extends NetworkSite, C> implements NetworkR
         sites.pass(connectionContext, object, receiverSites);
     }
 
+    public void clearSites(){
+        sites.clear();
+    }
+
     public void register(T... sites) {
         Arrays.asList(sites).forEach(site -> {
             this.sites.add(site);

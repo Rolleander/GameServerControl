@@ -82,6 +82,14 @@ public class LobbyGameServer<L extends LobbySettings, P extends LobbySettings> i
         server.register(sites);
     }
 
+    public void unregister(LobbyServerSite<L, P>... sites) {
+        server.unregister(sites);
+    }
+
+    public void clearSites() {
+        server.clearSites();
+    }
+
     public void open() {
         server.open();
     }

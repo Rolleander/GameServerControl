@@ -44,7 +44,7 @@ public class CreateLobbyTask extends AbstractClientTask<GameLobby> {
 
         @PackageReceiver
         public void receive(NT_LobbyJoined lobbyJoin) {
-            GameLobby lobby = LobbyChange.createdLobby(lobbyJoin);
+            GameLobby lobby = LobbyChange.createdLobby(getClient(),lobbyJoin);
             LastConnection.setLastConnection(lobby.getServerIp());
             complete(lobby);
         }
