@@ -47,15 +47,6 @@ public class MultiSitesHandler<T extends NetworkSite, C> extends AbstractSitesHa
     }
 
     @Override
-    public void clear() {
-        siteModificationLock.writeLock().lock();
-        this.sites.clear();
-        this.siteRoutes.clear();
-        this.activeSites.clear();
-        siteModificationLock.writeLock().unlock();
-    }
-
-    @Override
     protected void putSite(T site) {
         super.putSite(site);
         activeSites.values().forEach(sites -> sites.put((Class<T>) site.getClass(), clone(site)));

@@ -1,13 +1,18 @@
 package com.broll.networklib.site;
 
+import com.beust.jcommander.internal.Lists;
 import com.broll.networklib.PackageReceiver;
+import com.broll.networklib.client.impl.LobbyConnectionSite;
 import com.broll.networklib.network.AnnotationScanner;
+import com.broll.networklib.server.impl.ConnectionSite;
+import com.broll.networklib.server.impl.LobbySite;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.minlog.Log;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -18,6 +23,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 public abstract class AbstractSitesHandler<T extends NetworkSite, C> {
+
+    /**
+     * list of sites that are protected from clearing all sites
+     */
+    private final static List<Class<? extends NetworkSite>> INTERNAL_SITES = Lists.newArrayList(ConnectionSite.class, LobbySite.class, LobbyConnectionSite.class);
 
     private final static UnknownMessageReceiver DEFAULT_UNKNOWN_MESSAGE_RECEIVER = (message) -> {
         Log.error("No receiverMethod registered for network object " + message);
@@ -45,10 +55,12 @@ public abstract class AbstractSitesHandler<T extends NetworkSite, C> {
         this.unknownMessageReceiver = unknownMessageReceiver;
     }
 
-    public void clear(){
+    public void clear() {
         siteModificationLock.writeLock().lock();
-        this.sites.clear();
-        this.siteRoutes.clear();
+        new ArrayList(sites.values()).stream().filter(site -> !INTERNAL_SITES.contains(site.getClass())).forEach(site -> {
+            sites.remove(site.getClass());
+            removeSite((T) site);
+        });
         siteModificationLock.writeLock().unlock();
     }
 

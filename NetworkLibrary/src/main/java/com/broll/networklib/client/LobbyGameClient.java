@@ -50,6 +50,14 @@ public class LobbyGameClient implements NetworkRegister {
         this.clientAuthenticationKey = clientAuthenticationKey;
     }
 
+    public void sendTCP(Object message){
+        client.sendTCP(message);
+    }
+
+    public void sendUDP(Object message){
+        client.sendUDP(message);
+    }
+
     @Override
     public Kryo getKryo() {
         return client.getKryo();
