@@ -14,6 +14,7 @@ import com.broll.networklib.server.LobbyServerSite;
 import com.broll.networklib.server.NetworkConnection;
 import com.broll.networklib.server.ConnectionRestriction;
 import com.broll.networklib.server.RestrictionType;
+import com.esotericsoftware.minlog.Log;
 
 import java.util.List;
 
@@ -46,6 +47,7 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
     @ConnectionRestriction(RestrictionType.NOT_IN_LOBBY)
     @PackageReceiver
     public void reconnectCheck(NT_ReconnectCheck check) {
+        Log.info("check reconnect");
         String key = check.authenticationKey;
         Player player = playerRegister.getPlayer(key);
         //player exists, has an inactive connection and is party of a lobby

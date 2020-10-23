@@ -97,11 +97,13 @@ public class Player<P extends LobbySettings> {
     }
 
     public Object getSettings() {
-        if (data == null) {return null;}
+        if (data == null) {
+            return null;
+        }
         return data.getSettings();
     }
 
-     NT_LobbyPlayerInfo nt() {
+    NT_LobbyPlayerInfo nt() {
         NT_LobbyPlayerInfo info = new NT_LobbyPlayerInfo();
         info.id = getId();
         info.name = getName();
@@ -109,5 +111,12 @@ public class Player<P extends LobbySettings> {
         return info;
     }
 
+    @Override
+    public String toString() {
+        return "Player{" +
+                "name='" + name + '\'' +
+                ", id=" + id +
+                '}';
+    }
 }
 

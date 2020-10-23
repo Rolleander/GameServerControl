@@ -4,6 +4,7 @@ import com.broll.networklib.GameEndpoint;
 import com.broll.networklib.network.IRegisterNetwork;
 import com.broll.networklib.network.NetworkException;
 import com.broll.networklib.network.NetworkRegistry;
+import com.broll.networklib.network.nt.NT_ReconnectCheck;
 import com.broll.networklib.site.MultiSitesHandler;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Connection;
@@ -36,7 +37,8 @@ public class GameServer extends GameEndpoint<ServerSite, NetworkConnection> {
         if (open) {
             shutdown();
         }
-        server.addListener(new Listener.ThreadedListener(new ConnectionListener()));
+        server.addListener(new ConnectionListener());
+//        server.addListener(new Listener.ThreadedListener(new ConnectionListener()));
         server.start();
         try {
             server.bind(NetworkRegistry.TCP_PORT, NetworkRegistry.UDP_PORT);
@@ -91,6 +93,9 @@ public class GameServer extends GameEndpoint<ServerSite, NetworkConnection> {
 
         @Override
         public void received(Connection c, Object o) {
+            if(o instanceof NT_ReconnectCheck){
+                Log.info("received check reconnect :)");
+            }
             NetworkConnection connection = (NetworkConnection) c;
             GameServer.this.received(connection, o);
         }

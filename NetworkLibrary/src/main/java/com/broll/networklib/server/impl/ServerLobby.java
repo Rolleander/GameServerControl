@@ -175,8 +175,10 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
     void playerChangedConnectionStatus(Player<P> player, boolean connected) {
         if (listener != null) {
             if (connected) {
+                Log.info("Player "+player+" reconnected to lobby "+this);
                 listener.playerReconnected(this, player);
             } else {
+                Log.info("Player "+player+" disconnected from lobby "+this);
                 listener.playerDisconnected(this, player);
             }
         }

@@ -50,11 +50,11 @@ public class LobbyGameClient implements NetworkRegister {
         this.clientAuthenticationKey = clientAuthenticationKey;
     }
 
-    public void sendTCP(Object message){
+    public void sendTCP(Object message) {
         client.sendTCP(message);
     }
 
-    public void sendUDP(Object message){
+    public void sendUDP(Object message) {
         client.sendUDP(message);
     }
 
@@ -82,7 +82,7 @@ public class LobbyGameClient implements NetworkRegister {
         client.unregister(sites);
     }
 
-    public void clearSites(){
+    public void clearSites() {
         client.clearSites();
     }
 
@@ -94,6 +94,9 @@ public class LobbyGameClient implements NetworkRegister {
 
     private CompletableFuture<GameLobby> updateLobby(CompletableFuture<GameLobby> future) {
         return future.whenComplete((lobby, e) -> {
+            if (e != null) {
+                lobby = null;
+            }
             this.connectedLobby = lobby;
             this.lobbyConnectionSite.setLobby(lobby);
         });
