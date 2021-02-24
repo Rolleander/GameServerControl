@@ -95,7 +95,7 @@ public abstract class AbstractSitesHandler<T extends NetworkSite, C> {
                 Class type = p.getType();
                 registerRoute(type, site, m);
             } else {
-                Log.error("PackageReceiver method " + m + " of object " + site + " has not correct amount of parameters (1)");
+                Log.error("PackageReceiver method " + m + " of object " + site + " does not have correct amount of parameters (1)");
             }
         });
     }
@@ -103,6 +103,7 @@ public abstract class AbstractSitesHandler<T extends NetworkSite, C> {
     public final void pass(C connectionContext, Object sentObject, ReceivingSites<T> receivingSites) {
         siteModificationLock.readLock().lock();
         ObjectTargetContainer container = siteRoutes.get(sentObject.getClass());
+        siteModificationLock.readLock().unlock();
         if (container == null) {
             if (sentObject instanceof FrameworkMessage.KeepAlive) {
             } else {
@@ -113,7 +114,6 @@ public abstract class AbstractSitesHandler<T extends NetworkSite, C> {
         Collection<T> sites = container.getTargetInstances(connectionContext);
         receivingSites.receivers(sites);
         container.pass(sites, connectionContext, sentObject);
-        siteModificationLock.readLock().unlock();
     }
 
     private void registerRoute(Class type, T site, Method receiverMethod) {

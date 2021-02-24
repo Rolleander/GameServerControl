@@ -4,6 +4,7 @@ import com.broll.networklib.PackageReceiver;
 import com.broll.networklib.client.tasks.AbstractTaskSite;
 import com.broll.networklib.client.tasks.DiscoveredLobbies;
 import com.broll.networklib.network.nt.NT_ServerInformation;
+import com.esotericsoftware.minlog.Log;
 
 import java.util.Arrays;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
 public class LobbyLookupSite extends AbstractTaskSite<DiscoveredLobbies> {
 
     public void lookup() {
+        Log.info("SEND LOOKUP");
         client.sendTCP(new NT_ServerInformation());
     }
 

@@ -72,9 +72,12 @@ public class MultiSitesHandler<T extends NetworkSite, C> extends AbstractSitesHa
 
     @Override
     public void initConnection(C connection) {
+        Log.info(connection+" lock");
         siteModificationLock.writeLock().lock();
+        Log.info(connection+" clone sites");
         activeSites.put(connection, clone(sites));
         siteModificationLock.writeLock().unlock();
+        Log.info(connection+" unlock");
     }
 
     @Override

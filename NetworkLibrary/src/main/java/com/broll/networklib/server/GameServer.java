@@ -78,7 +78,9 @@ public class GameServer extends GameEndpoint<ServerSite, NetworkConnection> {
             Log.info(c + " connected to server");
             NetworkConnection connection = (NetworkConnection) c;
             connection.setActive(true);
+            Log.info(c + " init connection");
             initConnection(connection);
+            Log.info(c + " pass sites");
             passAllSites(connection, sites -> sites.forEach(site -> site.onConnect(connection)));
         }
 
