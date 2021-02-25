@@ -2,9 +2,11 @@ package com.broll.networklib.client.impl;
 
 import com.broll.networklib.PackageReceiver;
 import com.broll.networklib.client.LobbyClientSite;
+import com.broll.networklib.client.auth.LastConnection;
 import com.broll.networklib.network.nt.NT_ChatMessage;
 import com.broll.networklib.network.nt.NT_LobbyClosed;
 import com.broll.networklib.network.nt.NT_LobbyJoined;
+import com.broll.networklib.network.nt.NT_LobbyLock;
 import com.broll.networklib.network.nt.NT_LobbyUpdate;
 import com.broll.networklib.network.nt.NT_LobbyKicked;
 
@@ -66,6 +68,15 @@ public class LobbyConnectionSite extends LobbyClientSite {
             lobby.getLobbyUpdateListener().closed();
         }
         resetLobby();
+    }
+
+    @PackageReceiver
+    public void receive(NT_LobbyLock lock) {
+        if (lock.locked) {
+            LastConnection.setLastConnection(lobby.getServerIp());
+        } else {
+            LastConnection.clear();
+        }
     }
 
     @Override

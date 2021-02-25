@@ -29,7 +29,7 @@ public class ClientAuthenticationKey {
     public static ClientAuthenticationKey fromFileCache() {
         String secret = null;
         if (fileAccess.exists()) {
-        //    secret = fileAccess.read();
+            secret = fileAccess.read();
         }
         if (secret != null) {
             return new ClientAuthenticationKey(secret);

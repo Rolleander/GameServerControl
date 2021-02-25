@@ -1,58 +1,62 @@
 package com.broll.networklib.server;
 
-import com.broll.networklib.server.impl.LobbySettings;
 import com.broll.networklib.server.impl.Player;
 import com.broll.networklib.server.impl.ServerLobby;
+import com.google.common.collect.Lists;
 
 import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.units.qual.C;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class LobbyServerCLI {
     private LobbyGameServer lobbyGameServer;
-    private Map<String, Command> commands = new HashMap<>();
+    private Map<String, CliCommand> commands = new HashMap<>();
     private boolean shutdownCalled = false;
 
     LobbyServerCLI(LobbyGameServer lobbyGameServer) {
         this.lobbyGameServer = lobbyGameServer;
-        cmd("help", "Displays this help", options -> {
-            print(">>>> The following commands are available:");
-            commands.entrySet().forEach(entry -> print(entry.getKey() + " - " + entry.getValue().info));
-        });
-        cmd("close", "Shutdown server", options -> {
-            print("Server will shutdown now");
-            lobbyGameServer.shutdown();
-            shutdownCalled = true;
-        });
-        cmd("info", "Server info", options -> {
-            Collection<ServerLobby> lobbies = lobbyGameServer.getLobbyHandler().getLobbies();
-            print("Server has " + lobbies.size() + " lobbies open with " + lobbies.stream().map(ServerLobby::getPlayerCount).reduce(0, Integer::sum) + " total players");
-            lobbies.forEach(lobby -> {
-                Collection<Player> players = lobby.getPlayers();
-                print("==> [" + lobby.getId() + "] " + lobby.getName() + " with " + players.size() + " players: " + players.stream().map(Player::getName).collect(Collectors.joining(",")));
-            });
-        });
+        Lists.newArrayList(
+                cmd("help", "Displays this help", options -> {
+                    print(">>>> The following commands are available:");
+                    commands.entrySet().forEach(entry -> print(entry.getKey() + " - " + entry.getValue().info));
+                }),
+                cmd("close", "Shutdown server", options -> {
+                    print("Server will shutdown now");
+                    lobbyGameServer.shutdown();
+                    shutdownCalled = true;
+                }),
+                cmd("info", "Server info", options -> {
+                    Collection<ServerLobby> lobbies = lobbyGameServer.getLobbyHandler().getLobbies();
+                    print("Server has " + lobbies.size() + " lobbies open with " + lobbies.stream().map(ServerLobby::getPlayerCount).reduce(0, Integer::sum) + " total players");
+                    lobbies.forEach(lobby -> {
+                        Collection<Player> players = lobby.getPlayers();
+                        String hidden = lobby.isHidden() ? " Hidden" : "";
+                        String locked = lobby.isLocked() ? " Locked" : "";
+                        String full = lobby.isFull() ? " Full" : "";
+                        String autoClose = lobby.isAutoClose() ? "" : " AlwaysOpen";
+                        String limit = lobby.getPlayerLimit() == ServerLobby.NO_PLAYER_LIMIT ? "" : " / "+lobby.getPlayerLimit();
+                        print("==> "+lobby.getName() +" [#"+lobby.getId() + locked + full + hidden + autoClose + "] with " + players.size() +limit + " players (" + players.stream().map(Player::getName).collect(Collectors.joining(","))+")");
+                    });
+                })
+        ).forEach(this::add);
     }
 
     private void print(String s) {
         System.out.println(s);
     }
 
-    private void cmd(String starts, String help, Consumer<List<String>> consumer) {
-        Command command = new Command();
-        command.info = help;
-        command.consumer = consumer;
-        commands.put(starts, command);
+    private void add(CliCommand command) {
+        commands.put(command.cmd, command);
     }
 
     public boolean hanldeInput(String input) {
@@ -69,18 +73,33 @@ public class LobbyServerCLI {
                 options.add(cmd[i]);
             }
         }
-        commands.entrySet().stream().
-                filter(entry -> entry.getKey().
-                        startsWith(cmd[0])).
-                forEach(entry -> entry.getValue().consumer.
-                        accept(options));
+        CliCommand foundCmd = commands.get(cmd[0]);
+        if(foundCmd!=null){
+            try {
+                foundCmd.consumer.run(options);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        else{
+            System.err.println("Command not found: \""+cmd[0]+"\" Type help for list of available commands");
+        }
         return shutdownCalled;
     }
 
-    public static void open(LobbyGameServer server) {
+    public static CliCommand cmd(String cmd, String help, ICLIExecutor execution) {
+        CliCommand command = new CliCommand();
+        command.cmd = cmd;
+        command.info = help;
+        command.consumer = execution;
+        return command;
+    }
+
+    public static void open(LobbyGameServer server, CliCommand... cmds) {
         BufferedReader reader =
                 new BufferedReader(new InputStreamReader(System.in));
         LobbyServerCLI cli = server.initCLI();
+        Arrays.stream(cmds).forEach(cli::add);
         do {
             try {
                 String input = reader.readLine();
@@ -95,8 +114,9 @@ public class LobbyServerCLI {
         } while (true);
     }
 
-    private class Command {
+    public static class CliCommand {
+        public String cmd;
         public String info;
-        public Consumer<List<String>> consumer;
+        public ICLIExecutor consumer;
     }
 }

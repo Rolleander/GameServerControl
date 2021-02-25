@@ -59,7 +59,7 @@ public class LobbyGameServer<L extends LobbySettings, P extends LobbySettings> i
         return server.getKryo();
     }
 
-    public LobbyServerCLI initCLI() {
+    LobbyServerCLI initCLI() {
         return new LobbyServerCLI(this);
     }
 

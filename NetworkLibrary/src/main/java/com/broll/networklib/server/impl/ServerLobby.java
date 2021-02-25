@@ -3,6 +3,7 @@ package com.broll.networklib.server.impl;
 import com.broll.networklib.network.nt.NT_ChatMessage;
 import com.broll.networklib.network.nt.NT_LobbyInformation;
 import com.broll.networklib.network.nt.NT_LobbyJoined;
+import com.broll.networklib.network.nt.NT_LobbyLock;
 import com.broll.networklib.network.nt.NT_LobbyPlayerInfo;
 import com.broll.networklib.network.nt.NT_LobbyUpdate;
 import com.esotericsoftware.minlog.Log;
@@ -19,13 +20,13 @@ import java.util.stream.Stream;
 
 public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
 
-    private final static int NO_LIMIT = -1;
+    public final static int NO_PLAYER_LIMIT = -1;
 
     private LobbyHandler<L, P> lobbyHandler;
 
     private int id;
 
-    private int playerLimit = NO_LIMIT;
+    private int playerLimit = NO_PLAYER_LIMIT;
 
     private List<Player<P>> players = Collections.synchronizedList(new ArrayList<>());
 
@@ -157,8 +158,23 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
         this.hidden = hidden;
     }
 
-    public void setLocked(boolean locked) {
-        this.locked = locked;
+    public void lock() {
+        if (!this.locked) {
+            updateLock(true);
+        }
+    }
+
+    public void unlock() {
+        if (this.locked) {
+            updateLock(false);
+        }
+    }
+
+    private void updateLock(boolean lock) {
+        this.locked = lock;
+        NT_LobbyLock nt = new NT_LobbyLock();
+        nt.locked = lock;
+        sendToAllTCP(nt);
     }
 
     public boolean isHidden() {
@@ -166,7 +182,7 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
     }
 
     public boolean isFull() {
-        if (playerLimit == NO_LIMIT) {
+        if (playerLimit == NO_PLAYER_LIMIT) {
             return false;
         }
         return players.size() >= playerLimit;
@@ -175,10 +191,10 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
     void playerChangedConnectionStatus(Player<P> player, boolean connected) {
         if (listener != null) {
             if (connected) {
-                Log.info("Player "+player+" reconnected to lobby "+this);
+                Log.info("Player " + player + " reconnected to lobby " + this);
                 listener.playerReconnected(this, player);
             } else {
-                Log.info("Player "+player+" disconnected from lobby "+this);
+                Log.info("Player " + player + " disconnected from lobby " + this);
                 listener.playerDisconnected(this, player);
             }
         }

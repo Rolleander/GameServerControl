@@ -136,10 +136,6 @@ public class LobbyGameClient implements NetworkRegister {
         return updateLobby(runTask(new CreateLobbyTask(playerName, lobbySettings, clientAuthenticationKey)));
     }
 
-    public void clearLastConnection() {
-        LastConnection.clear();
-    }
-
     public void clearClientAuthenticationKey() {
         ClientAuthenticationKey.clearFileCache();
     }

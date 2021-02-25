@@ -104,12 +104,12 @@ public class LobbyTests extends NetworkTest {
     public void lockLobby() {
         ServerLobby lobby = openGameLobby(null, "TestLobby");
         LobbyGameClient peter = testClient("Peter", lobby);
-        lobby.setLocked(true);
+        lobby.lock();
         //client should not find locked lobby
         expectFailure(() -> testClient("Pan", lobby), "Lobby not found");
         assertEquals(1, lobby.getPlayers().size());
         //unlock and try again joining
-        lobby.setLocked(false);
+        lobby.unlock();
         testClient("Pan", lobby);
         assertEquals(2, lobby.getPlayers().size());
         dropPackages();
@@ -130,7 +130,7 @@ public class LobbyTests extends NetworkTest {
     public void reconnect() throws ExecutionException, InterruptedException {
         ServerLobby lobby = openGameLobby(null, "TestLobby");
         LobbyGameClient peter = testClient("Peter", lobby);
-        lobby.setLocked(true);
+        lobby.lock();
         peter.shutdown();
         assertEquals(1, lobby.getPlayers().size());
         assertEquals(false, lobby.getPlayer(0).isOnline());

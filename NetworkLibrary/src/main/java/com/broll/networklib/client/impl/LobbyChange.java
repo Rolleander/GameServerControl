@@ -32,7 +32,6 @@ public final class LobbyChange {
         lobby.initClient(client);
         updateLobby(lobby, lobbyJoin);
         lobby.playerJoined(lobbyJoin.playerId);
-        LastConnection.setLastConnection(lobby.getServerIp());
     }
 
     public static void updateLobby(GameLobby lobby, NT_LobbyUpdate update) {
