@@ -9,7 +9,8 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
-import com.esotericsoftware.minlog.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 
 public class GameClient extends GameEndpoint<ClientSite, GameClient.ClientConnection> {
 
+    private final static Logger Log = LoggerFactory.getLogger(GameClient.class);
     private final static int CONNECTION_TIMEOUT = 5000;
     private Client client = new Client();
     private String connectedIp;

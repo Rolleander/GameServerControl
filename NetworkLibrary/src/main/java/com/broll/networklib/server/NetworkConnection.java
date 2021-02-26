@@ -2,7 +2,8 @@ package com.broll.networklib.server;
 
 import com.broll.networklib.server.impl.Player;
 import com.esotericsoftware.kryonet.Connection;
-import com.esotericsoftware.minlog.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class NetworkConnection extends Connection {
 

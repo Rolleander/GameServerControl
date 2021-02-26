@@ -4,13 +4,16 @@ import com.broll.networklib.PackageReceiver;
 import com.broll.networklib.client.tasks.AbstractTaskSite;
 import com.broll.networklib.client.tasks.DiscoveredLobbies;
 import com.broll.networklib.network.nt.NT_ServerInformation;
-import com.esotericsoftware.minlog.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class LobbyLookupSite extends AbstractTaskSite<DiscoveredLobbies> {
+
+    private final static Logger Log = LoggerFactory.getLogger(LobbyLookupSite.class);
 
     public void lookup() {
         Log.info("SEND LOOKUP");

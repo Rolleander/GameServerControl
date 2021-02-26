@@ -6,7 +6,8 @@ import com.broll.networklib.network.nt.NT_LobbyJoined;
 import com.broll.networklib.network.nt.NT_LobbyLock;
 import com.broll.networklib.network.nt.NT_LobbyPlayerInfo;
 import com.broll.networklib.network.nt.NT_LobbyUpdate;
-import com.esotericsoftware.minlog.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,6 +20,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
+
+    private final static Logger Log = LoggerFactory.getLogger(ServerLobby.class);
 
     public final static int NO_PLAYER_LIMIT = -1;
 

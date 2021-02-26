@@ -11,7 +11,7 @@ public class Player<P extends LobbySettings> {
 
     private String name;
     private final int id;
-    private boolean online;
+    private boolean online = true;
     private NetworkConnection connection;
     private ServerLobby serverLobby;
     private String authenticationKey;
@@ -69,7 +69,7 @@ public class Player<P extends LobbySettings> {
         return serverLobby;
     }
 
-    public void updateOnlineStatus(boolean online) {
+    void updateOnlineStatus(boolean online) {
         this.online = online;
     }
 

@@ -14,12 +14,14 @@ import com.broll.networklib.server.LobbyServerSite;
 import com.broll.networklib.server.NetworkConnection;
 import com.broll.networklib.server.ConnectionRestriction;
 import com.broll.networklib.server.RestrictionType;
-import com.esotericsoftware.minlog.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> extends LobbyServerSite<L, P> {
 
+    private final static Logger Log = LoggerFactory.getLogger(ConnectionSite.class);
     private PlayerRegister playerRegister;
     private String serverName;
 

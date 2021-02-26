@@ -2,7 +2,8 @@ package com.broll.networklib.server.impl;
 
 import com.broll.networklib.network.nt.NT_LobbyKicked;
 import com.broll.networklib.server.LobbyServerSitesHandler;
-import com.esotericsoftware.minlog.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class LobbyHandler<L extends LobbySettings, P extends LobbySettings> {
 
+    private final static Logger Log = LoggerFactory.getLogger(LobbyHandler.class);
     private AtomicInteger idCounter = new AtomicInteger();
     private Map<Integer, ServerLobby<L, P>> lobbies = new ConcurrentHashMap<>();
     private LobbyCloseListener listener;

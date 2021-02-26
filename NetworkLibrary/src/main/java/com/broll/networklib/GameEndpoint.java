@@ -8,7 +8,8 @@ import com.broll.networklib.site.NetworkSite;
 import com.broll.networklib.site.ReceivingSites;
 import com.broll.networklib.site.SiteReceiver;
 import com.broll.networklib.site.UnknownMessageReceiver;
-import com.esotericsoftware.minlog.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -17,6 +18,7 @@ import java.util.Map;
 
 public abstract class GameEndpoint<T extends NetworkSite, C> implements NetworkRegister {
 
+    private final static Logger Log = LoggerFactory.getLogger(GameEndpoint.class);
     private AbstractSitesHandler<T, C> sites;
     private IRegisterNetwork registerNetwork;
 

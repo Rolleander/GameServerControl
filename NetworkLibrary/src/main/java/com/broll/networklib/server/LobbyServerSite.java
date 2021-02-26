@@ -6,7 +6,8 @@ import com.broll.networklib.server.impl.Player;
 import com.broll.networklib.server.impl.LobbySettings;
 import com.broll.networklib.server.impl.ServerLobby;
 import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.minlog.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.commons.lang3.ClassUtils;
 
@@ -19,6 +20,7 @@ import java.util.Map;
 
 public abstract class LobbyServerSite<L extends LobbySettings, P extends LobbySettings> extends ServerSite {
 
+    private final static Logger Log = LoggerFactory.getLogger(LobbyServerSite.class);
     protected LobbyHandler<L, P> lobbyHandler;
     private LobbyGameServer<L, P> lobbyGameServer;
     private List<SharedField> sharedFields = new ArrayList<>();

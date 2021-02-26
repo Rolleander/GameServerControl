@@ -22,7 +22,8 @@ dependencies {
 
     // api 'com.broll.networklib'
     // https://mvnrepository.com/artifact/kryonet/kryonet-all
-    compile group: 'com.esotericsoftware.minlog', name: 'minlog', version: '1.2'
+    compile 'com.dorkbox:MinLog-SLF4J:1.12'
+    compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.29'
     compile group: 'com.esotericsoftware', name: 'kryonet', version: '2.22.0-RC1'
     implementation("com.google.guava:guava:28.2-jre")
 
@@ -43,4 +44,9 @@ dependencies {
     testImplementation 'junit:junit:4.+'
     testImplementation "org.mockito:mockito-all:1.9.+"
 
+}
+
+javadoc {
+    source = sourceSets.main.allJava
+    classpath = configurations.compile
 }

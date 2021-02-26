@@ -5,7 +5,8 @@ import com.broll.networklib.network.nt.NT_LobbyInformation;
 import com.broll.networklib.network.nt.NT_LobbyPlayerInfo;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.serializers.MapSerializer;
-import com.esotericsoftware.minlog.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.ClassPath;
 
@@ -17,6 +18,7 @@ import java.util.List;
 
 public final class NetworkRegistry {
 
+    private final static Logger Log = LoggerFactory.getLogger(NetworkRegistry.class);
 
     public final static int TCP_PORT = 54555;
     public final static int UDP_PORT = 54777;
@@ -38,7 +40,6 @@ public final class NetworkRegistry {
         //     serializer.setValueClass(Object.class, kryo.getSerializer(Object.class));
         //     serializer.setKeysCanBeNull(false);
         //     kryo.register(HashMap.class, serializer);
-
     }
 
     public static void register(Kryo kryo, String packagePath) {

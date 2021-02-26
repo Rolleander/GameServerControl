@@ -10,7 +10,8 @@ import com.broll.networklib.server.impl.LobbySettings;
 import com.broll.networklib.server.impl.ServerLobby;
 import com.broll.networklib.site.NetworkSite;
 import com.broll.networklib.site.SiteReceiver;
-import com.esotericsoftware.minlog.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -29,6 +30,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public abstract class NetworkTest<L extends LobbySettings, P extends LobbySettings> {
+    private final static Logger Log = LoggerFactory.getLogger(NetworkTest.class);
 
     private final static int TIMEOUT = 5000;
     private final static String IP = "localhost";
@@ -41,7 +43,6 @@ public abstract class NetworkTest<L extends LobbySettings, P extends LobbySettin
 
     @Before
     public void before() {
-        Log.INFO();
         server = new TestServer(registerNetwork(), TIMEOUT);
         server.setSiteReceiver(tunneledReceiver());
         gameServer = new LobbyGameServer<>(server, "TestServer");

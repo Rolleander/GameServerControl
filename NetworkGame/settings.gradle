@@ -1,3 +1,0 @@
-include 'desktop', 'core', 'netlib'
-include ':netlib'
-project(':netlib').projectDir = new File('../NetworkLibrary/')

@@ -8,7 +8,8 @@ import com.broll.networklib.server.impl.ConnectionSite;
 import com.broll.networklib.server.impl.LobbySite;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.FrameworkMessage;
-import com.esotericsoftware.minlog.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 
 public abstract class AbstractSitesHandler<T extends NetworkSite, C> {
 
+    private final static Logger Log = LoggerFactory.getLogger(AbstractSitesHandler.class);
     /**
      * list of sites that are protected from clearing all sites
      */

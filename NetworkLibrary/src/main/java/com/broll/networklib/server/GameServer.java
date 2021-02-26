@@ -10,12 +10,14 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
-import com.esotericsoftware.minlog.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 public class GameServer extends GameEndpoint<ServerSite, NetworkConnection> {
 
+    private final static Logger Log = LoggerFactory.getLogger(GameServer.class);
     private Server server = new Server() {
         @Override
         protected Connection newConnection() {

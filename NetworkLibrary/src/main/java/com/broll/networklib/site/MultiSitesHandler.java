@@ -9,7 +9,8 @@ import com.broll.networklib.server.ServerSite;
 import com.broll.networklib.site.AbstractSitesHandler;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.FrameworkMessage;
-import com.esotericsoftware.minlog.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.map.MultiValueMap;
@@ -29,6 +30,7 @@ import java.util.stream.Stream;
 
 public class MultiSitesHandler<T extends NetworkSite, C> extends AbstractSitesHandler<T, C> {
 
+    private final static Logger Log = LoggerFactory.getLogger(MultiSitesHandler.class);
     private Map<C, Map<Class<T>, T>> activeSites = new HashMap<>();
 
     private final Kryo kryo = new Kryo();

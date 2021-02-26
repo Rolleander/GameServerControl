@@ -2,6 +2,8 @@ package com.broll.networklib.server;
 
 import com.broll.networklib.server.impl.Player;
 import com.broll.networklib.server.impl.ServerLobby;
+
+import com.esotericsoftware.minlog.Log;
 import com.google.common.collect.Lists;
 
 import org.apache.commons.lang3.StringUtils;
@@ -34,6 +36,11 @@ public class LobbyServerCLI {
                     print("Server will shutdown now");
                     lobbyGameServer.shutdown();
                     shutdownCalled = true;
+                }),
+                cmd("loglevel","Changes loglevel [0=Trace, 1=Debug, 2=Info, 3=Warn, 5=Error, 6=None]",options->{
+                    int level = Integer.parseInt(options.get(0));
+                    com.esotericsoftware.minlog.Log.set(level);
+                    System.out.println("Changed loglevel to "+level);
                 }),
                 cmd("info", "Server info", options -> {
                     Collection<ServerLobby> lobbies = lobbyGameServer.getLobbyHandler().getLobbies();

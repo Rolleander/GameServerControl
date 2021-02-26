@@ -1,6 +1,7 @@
 package com.broll.networklib.client.auth;
 
-import com.esotericsoftware.minlog.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.commons.io.FileUtils;
 
@@ -9,6 +10,7 @@ import java.io.IOException;
 
 public class TempFileAccess implements IFileAccess {
 
+    private final static Logger Log = LoggerFactory.getLogger(TempFileAccess.class);
     private File file;
 
     public TempFileAccess(String fileName) {
