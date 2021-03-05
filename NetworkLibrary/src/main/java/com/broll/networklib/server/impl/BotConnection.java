@@ -5,6 +5,9 @@ import com.broll.networklib.site.MultiSitesHandler;
 import com.broll.networklib.site.SingleSitesHandler;
 
 import java.util.Arrays;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class BotConnection<P extends LobbySettings> extends NetworkConnection {
 
@@ -35,8 +38,8 @@ public class BotConnection<P extends LobbySettings> extends NetworkConnection {
     }
 
     private int received(Object o) {
-        sites.pass(null, o, sites -> {
-        });
+        endpoint.schedule(() -> sites.pass(null, o, sites -> {
+        }));
         return 0;
     }
 

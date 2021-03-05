@@ -317,7 +317,7 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
         return autoClose;
     }
 
-    public Object getSettings() {
+    private Object getSettings() {
         if (data == null) {
             return null;
         }

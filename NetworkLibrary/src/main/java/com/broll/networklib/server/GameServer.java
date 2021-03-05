@@ -18,7 +18,7 @@ import java.io.IOException;
 public class GameServer extends GameEndpoint<ServerSite, NetworkConnection> {
 
     private final static Logger Log = LoggerFactory.getLogger(GameServer.class);
-    private Server server = new Server() {
+    private Server server = new Server(GameEndpoint.WRITE_BUFFER_SIZE*2, GameEndpoint.OBJECT_BUFFER_SIZE) {
         @Override
         protected Connection newConnection() {
             return new NetworkConnection();
@@ -97,9 +97,6 @@ public class GameServer extends GameEndpoint<ServerSite, NetworkConnection> {
 
         @Override
         public void received(Connection c, Object o) {
-            if(o instanceof NT_ReconnectCheck){
-                Log.info("received check reconnect :)");
-            }
             NetworkConnection connection = (NetworkConnection) c;
             GameServer.this.received(connection, o);
         }

@@ -25,7 +25,7 @@ public class GameClient extends GameEndpoint<ClientSite, GameClient.ClientConnec
 
     private final static Logger Log = LoggerFactory.getLogger(GameClient.class);
     private final static int CONNECTION_TIMEOUT = 5000;
-    private Client client = new Client();
+    private Client client = new Client(GameEndpoint.WRITE_BUFFER_SIZE, GameEndpoint.OBJECT_BUFFER_SIZE);
     private String connectedIp;
     private final ClientConnection connection = new ClientConnection();
 
