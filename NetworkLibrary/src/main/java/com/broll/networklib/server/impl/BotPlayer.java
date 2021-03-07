@@ -1,6 +1,7 @@
 package com.broll.networklib.server.impl;
 
 import com.broll.networklib.network.nt.NT_LobbyPlayerInfo;
+import com.esotericsoftware.minlog.Log;
 
 public class BotPlayer<P extends LobbySettings> extends Player<P> {
 
@@ -20,6 +21,25 @@ public class BotPlayer<P extends LobbySettings> extends Player<P> {
 
     public void unregister(BotSite<P>... sites) {
         getBotConnection().unregister(sites);
+    }
+
+    @Override
+    void removedFromLobby() {
+        super.removedFromLobby();
+        remove();
+    }
+
+    public boolean remove() {
+        ServerLobby lobby = getServerLobby();
+        if (lobby != null) {
+            if (lobby.isLocked()) {
+                Log.error("Cannot remove bot since it is part of a locked lobby!");
+                return false;
+            }
+            lobby.removePlayer(this);
+        }
+        getBotConnection().close();
+        return true;
     }
 
     @Override

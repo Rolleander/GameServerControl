@@ -38,9 +38,14 @@ public class BotConnection<P extends LobbySettings> extends NetworkConnection {
     }
 
     private int received(Object o) {
-        endpoint.schedule(() -> sites.pass(null, o, sites -> {
+        endpoint.schedule(() -> sites.pass(null, o, site -> {
         }));
         return 0;
+    }
+
+    @Override
+    public void close() {
+        endpoint.shutdown();
     }
 
     public BotPlayer<P> getBot() {

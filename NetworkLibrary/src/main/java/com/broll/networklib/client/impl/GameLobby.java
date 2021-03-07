@@ -37,6 +37,8 @@ public class GameLobby {
 
     private GameClient client;
 
+    private LobbyPlayer owner;
+
     GameLobby() {
         super();
     }
@@ -124,6 +126,10 @@ public class GameLobby {
         this.settings = settings;
     }
 
+    void setOwner(LobbyPlayer owner) {
+        this.owner = owner;
+    }
+
     public boolean isPlayerJoined() {
         return playerJoined;
     }
@@ -154,6 +160,10 @@ public class GameLobby {
 
     public Object getSettings() {
         return settings;
+    }
+
+    public LobbyPlayer getOwner() {
+        return owner;
     }
 
     void playerJoined(int playerId) {

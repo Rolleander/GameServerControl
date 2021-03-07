@@ -2,6 +2,7 @@ package com.broll.networklib.server.impl;
 
 import com.broll.networklib.network.nt.NT_LobbyKicked;
 import com.broll.networklib.server.LobbyServerSitesHandler;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +26,7 @@ public class LobbyHandler<L extends LobbySettings, P extends LobbySettings> {
     private PlayerRegister playerRegister;
     private LobbyServerSitesHandler sitesHandler;
 
-    public LobbyHandler(LobbyCloseListener listener, PlayerRegister playerRegister, LobbyServerSitesHandler sitesHandler ) {
+    public LobbyHandler(LobbyCloseListener listener, PlayerRegister playerRegister, LobbyServerSitesHandler sitesHandler) {
         this.listener = listener;
         this.playerRegister = playerRegister;
         this.sitesHandler = sitesHandler;
@@ -70,6 +71,7 @@ public class LobbyHandler<L extends LobbySettings, P extends LobbySettings> {
     public void kickPlayer(ServerLobby<L, P> lobby, Player<P> player) {
         lobby.removePlayer(player);
         listener.kickedPlayer(player);
+        lobby.sendLobbyUpdate();
         lobby.checkAutoClose();
     }
 
@@ -92,6 +94,7 @@ public class LobbyHandler<L extends LobbySettings, P extends LobbySettings> {
             if (toLobby.addPlayer(player)) {
                 if (fromLobby != null) {
                     fromLobby.removePlayer(player);
+                    fromLobby.sendLobbyUpdate();
                     fromLobby.checkAutoClose();
                 }
                 if (player.getListener() != null) {
@@ -105,13 +108,14 @@ public class LobbyHandler<L extends LobbySettings, P extends LobbySettings> {
 
     public Optional<BotPlayer<P>> createBot(ServerLobby<L, P> lobby, String name, P playerSettings) {
         BotConnection botConnection = new BotConnection();
-        botConnection.init(new BotEndpoint(sitesHandler, botConnection));
         BotPlayer<P> bot = new BotPlayer<>(playerRegister.registerPlayerId(), botConnection);
         bot.setName(name);
-        botConnection.setPlayer(bot);
         bot.setData(playerSettings);
+        botConnection.setPlayer(bot);
+        botConnection.init(new BotEndpoint(sitesHandler, botConnection));
         if (lobby.addPlayer(bot)) {
             playerRegister.register(bot.getAuthenticationKey(), bot);
+            lobby.sendLobbyJoinUpdate(bot);
             return Optional.of(bot);
         }
         return Optional.empty();

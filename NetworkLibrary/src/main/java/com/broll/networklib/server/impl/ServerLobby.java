@@ -6,6 +6,7 @@ import com.broll.networklib.network.nt.NT_LobbyJoined;
 import com.broll.networklib.network.nt.NT_LobbyLock;
 import com.broll.networklib.network.nt.NT_LobbyPlayerInfo;
 import com.broll.networklib.network.nt.NT_LobbyUpdate;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +29,8 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
     private LobbyHandler<L, P> lobbyHandler;
 
     private int id;
+
+    private Player<P> owner;
 
     private int playerLimit = NO_PLAYER_LIMIT;
 
@@ -113,6 +116,7 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
         }
         players.add(player);
         player.setLobby(this);
+        assignOwner();
         Log.info("Lobby update [" + id + "] " + name + " | Player " + player.getName() + " joined!");
         if (player.getListener() != null) {
             player.getListener().joinedLobby(player, this);
@@ -121,6 +125,23 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
             listener.playerJoined(this, player);
         }
         return true;
+    }
+
+    private void assignOwner() {
+        if (owner == null) {
+            if (!players.isEmpty()) {
+                //find next non bot and make him owner
+                getPlayers().stream().filter(it -> it instanceof BotPlayer == false).findFirst().ifPresent(player -> {
+                    this.owner = player;
+                });
+            }
+        } else {
+            if (!players.contains(owner)) {
+                //owner left, pick new random one
+                owner = null;
+                assignOwner();
+            }
+        }
     }
 
     public void setPlayerLimit(int playerLimit) {
@@ -203,12 +224,21 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
         }
     }
 
-    void removePlayer(Player<P> player) {
+    synchronized void removePlayer(Player<P> player) {
+        if (!players.contains(player)) {
+            Log.warn("Lobby update [" + id + "] " + name + " | Player " + player.getName() + " cannot remove player from lobby that is not part of its players!");
+            return;
+        }
+        if (locked) {
+            Log.warn("Lobby update [" + id + "] " + name + " | Can not remove player " + player.getName() + ", lobby is locked!");
+            return;
+        }
         //only set lobby to null if player is from this lobby, to prevent unsetting lobby when transfering player
         if (player.getServerLobby() == this) {
-            player.setLobby(null);
+            player.removedFromLobby();
         }
         players.remove(player);
+        assignOwner();
         Log.info("Lobby update [" + id + "] " + name + " | Player " + player.getName() + " left.");
         if (player.getListener() != null) {
             player.getListener().leftLobby(player, this);
@@ -249,6 +279,9 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
     void fillLobbyUpdate(NT_LobbyUpdate update) {
         fillLobbyInfo(update);
         update.players = getPlayers().stream().map(Player::nt).toArray(NT_LobbyPlayerInfo[]::new);
+        if (owner != null) {
+            update.owner = owner.getId();
+        }
     }
 
     void fillLobbyInfo(NT_LobbyInformation info) {
@@ -322,6 +355,10 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
             return null;
         }
         return data.getSettings();
+    }
+
+    public Player<P> getOwner() {
+        return owner;
     }
 
     public Map<String, Object> getSharedData() {

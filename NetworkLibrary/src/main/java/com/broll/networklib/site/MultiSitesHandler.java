@@ -9,6 +9,7 @@ import com.broll.networklib.server.ServerSite;
 import com.broll.networklib.site.AbstractSitesHandler;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.FrameworkMessage;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,12 +75,13 @@ public class MultiSitesHandler<T extends NetworkSite, C> extends AbstractSitesHa
 
     @Override
     public void initConnection(C connection) {
-        Log.info(connection+" lock");
         siteModificationLock.writeLock().lock();
-        Log.info(connection+" clone sites");
-        activeSites.put(connection, clone(sites));
+        Map<Class<T>, T> clonedSites = new HashMap<>();
+        sites.entrySet().forEach(entry ->
+                clonedSites.put(entry.getKey(), clone(entry.getValue()))
+        );
+        activeSites.put(connection, clonedSites);
         siteModificationLock.writeLock().unlock();
-        Log.info(connection+" unlock");
     }
 
     @Override

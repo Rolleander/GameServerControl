@@ -29,7 +29,7 @@ public abstract class AbstractSitesHandler<T extends NetworkSite, C> {
     /**
      * list of sites that are protected from clearing all sites
      */
-    private final static List<Class<? extends NetworkSite>> INTERNAL_SITES = Lists.newArrayList(ConnectionSite.class, LobbySite.class, LobbyConnectionSite.class);
+    protected final static List<Class<? extends NetworkSite>> INTERNAL_SITES = Lists.newArrayList(ConnectionSite.class, LobbySite.class, LobbyConnectionSite.class);
 
     private final static UnknownMessageReceiver DEFAULT_UNKNOWN_MESSAGE_RECEIVER = (message) -> {
         Log.error("No receiverMethod registered for network object " + message);

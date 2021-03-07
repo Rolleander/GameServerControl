@@ -4,8 +4,10 @@ import com.broll.networklib.GameEndpoint;
 import com.broll.networklib.client.ClientSite;
 import com.broll.networklib.network.IRegisterNetwork;
 import com.broll.networklib.server.LobbyServerSitesHandler;
+import com.broll.networklib.server.ServerSite;
 import com.esotericsoftware.kryo.Kryo;
 
+import java.util.Collection;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -26,11 +28,17 @@ public class BotEndpoint<L extends LobbySettings, P extends LobbySettings> exten
     }
 
     void schedule(Runnable runnable) {
-        executor.schedule(runnable, BOT_DELAY, TimeUnit.MILLISECONDS);
+        if (!executor.isShutdown()) {
+            executor.schedule(runnable, BOT_DELAY, TimeUnit.MILLISECONDS);
+        }
     }
 
     public void send(Object object) {
-        schedule(() -> sitesHandler.pass(botConnection, object, sites -> sites.forEach(site -> site.receive(botConnection, object))));
+        schedule(() -> sitesHandler.pass(botConnection, object, sites -> initSites(sites, object)));
+    }
+
+    private void initSites(Collection<ServerSite> sites, Object object) {
+        sites.forEach(site -> site.receive(botConnection, object));
     }
 
     public BotPlayer<P> getBot() {

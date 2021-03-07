@@ -36,7 +36,7 @@ public class CreateLobbyTask extends AbstractClientTask<GameLobby> {
         public void create() {
             NT_LobbyCreate create = new NT_LobbyCreate();
             create.playerName = playerName;
-            create.lobbyName = playerName + " Lobby";
+            create.lobbyName = playerName + "'s Lobby";
             create.authenticationKey = authKey.getSecret();
             create.settings = settings;
             client.sendTCP(create);
@@ -44,8 +44,7 @@ public class CreateLobbyTask extends AbstractClientTask<GameLobby> {
 
         @PackageReceiver
         public void receive(NT_LobbyJoined lobbyJoin) {
-            GameLobby lobby = LobbyChange.createdLobby(getClient(),lobbyJoin);
-            LastConnection.setLastConnection(lobby.getServerIp());
+            GameLobby lobby = LobbyChange.createdLobby(getClient(), lobbyJoin, getClient().getConnectedIp());
             complete(lobby);
         }
 

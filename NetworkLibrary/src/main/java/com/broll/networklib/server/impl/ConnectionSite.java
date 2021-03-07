@@ -14,6 +14,7 @@ import com.broll.networklib.server.LobbyServerSite;
 import com.broll.networklib.server.NetworkConnection;
 import com.broll.networklib.server.ConnectionRestriction;
 import com.broll.networklib.server.RestrictionType;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +25,10 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
     private final static Logger Log = LoggerFactory.getLogger(ConnectionSite.class);
     private PlayerRegister playerRegister;
     private String serverName;
+
+    public ConnectionSite() {
+        //required for cloning
+    }
 
     public ConnectionSite(String name, PlayerRegister playerRegister) {
         super();
@@ -95,6 +100,7 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
         }
     }
 
+    @ConnectionRestriction(RestrictionType.NOT_IN_LOBBY)
     @PackageReceiver
     public void createLobby(NT_LobbyCreate create) {
         boolean reconnected = initPlayerConnection(create.playerName, create.authenticationKey);
@@ -175,9 +181,15 @@ public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> ex
             player = new Player(playerRegister.registerPlayerId(), authenticationKey, getConnection());
             //put player in register
             playerRegister.register(authenticationKey, player);
-        } else if (!player.getConnection().isActive()) {
-            //find existing player, for which the previous connection is inactive (prevent stealing when key is known)
-            reconnected = true;
+        } else {
+            if (player.getConnection().isActive()) {
+                //someone else trying to steal the player session with its key?
+                //do not allow login
+                getConnection().sendTCP(new NT_LobbyNoJoin());
+                throw new RuntimeException(authenticationKey + " already belongs to " + player + " who is still active, do not allow login for " + playerName);
+            } else {
+                reconnected = true;
+            }
         }
         player.setName(playerName);
         getConnection().setPlayer(player);

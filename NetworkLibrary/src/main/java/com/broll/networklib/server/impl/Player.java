@@ -25,6 +25,10 @@ public class Player<P extends LobbySettings> {
         this.connection = connection;
     }
 
+    void removedFromLobby() {
+        this.serverLobby = null;
+    }
+
     void setConnection(NetworkConnection connection) {
         this.connection = connection;
     }
@@ -132,5 +136,7 @@ public class Player<P extends LobbySettings> {
                 ", id=" + id +
                 '}';
     }
+
+
 }
 

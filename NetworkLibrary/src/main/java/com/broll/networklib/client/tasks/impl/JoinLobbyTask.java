@@ -44,7 +44,6 @@ public class JoinLobbyTask extends AbstractClientTask<GameLobby> {
         @PackageReceiver
         public void receive(NT_LobbyJoined lobbyJoin) {
             LobbyChange.joinedLobby(getClient(),lobby, lobbyJoin);
-            LastConnection.setLastConnection(lobby.getServerIp());
             complete(lobby);
         }
 

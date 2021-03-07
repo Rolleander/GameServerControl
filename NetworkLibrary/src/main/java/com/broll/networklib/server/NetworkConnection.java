@@ -13,7 +13,7 @@ public class NetworkConnection extends Connection {
 
     public void setPlayer(Player player) {
         this.player = player;
-        setName("Connection "+getID()+" player ["+player.getName()+"]");
+        setName("Connection "+getID()+" player ["+player+"]");
     }
 
     public Player getPlayer() {

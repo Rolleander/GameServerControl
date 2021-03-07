@@ -15,8 +15,9 @@ import java.util.stream.Collectors;
 
 public final class LobbyChange {
 
-    public static GameLobby createdLobby(GameClient client, NT_LobbyJoined lobbyJoin) {
+    public static GameLobby createdLobby(GameClient client, NT_LobbyJoined lobbyJoin, String ip) {
         GameLobby lobby = new GameLobby();
+        lobby.setServerIp(ip);
         joinedLobby(client, lobby, lobbyJoin);
         return lobby;
     }
@@ -38,6 +39,7 @@ public final class LobbyChange {
         synchronized (lobby) {
             updateLobbyInfo(lobby, update);
             updateLobbyPlayers(lobby, update.players);
+            lobby.setOwner(lobby.getPlayers().stream().filter(it -> it.getId() == update.owner).findFirst().orElse(null));
         }
     }
 
@@ -61,7 +63,8 @@ public final class LobbyChange {
             }
         }
         List<Integer> existingPlayers = Arrays.stream(playersInfo).map(p -> p.id).collect(Collectors.toList());
-        players.entrySet().stream().filter(entry -> !existingPlayers.contains(entry.getKey())).forEach(entry -> playerLeft(lobby, entry.getValue(), entry.getKey()));
+        players.entrySet().stream().filter(entry -> !existingPlayers.contains(entry.getKey())).collect(Collectors.toList()).stream().
+                forEach(entry -> playerLeft(lobby, entry.getValue(), entry.getKey()));
     }
 
     private static void updatePlayer(LobbyPlayer player, NT_LobbyPlayerInfo info) {

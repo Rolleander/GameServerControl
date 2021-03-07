@@ -15,7 +15,7 @@ public class BotSite<P extends LobbySettings> extends NetworkSite<BotEndpoint> {
         this.bot= botEndpoint.getBot();
     }
 
-    public void receive(Object object) {
+    public void sendServer(Object object) {
         botEndpoint.send(object);
     }
 
