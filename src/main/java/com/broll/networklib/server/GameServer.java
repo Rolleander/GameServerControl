@@ -1,6 +1,7 @@
 package com.broll.networklib.server;
 
 import com.broll.networklib.GameEndpoint;
+import com.broll.networklib.ThreadedListener;
 import com.broll.networklib.network.IRegisterNetwork;
 import com.broll.networklib.network.NetworkException;
 import com.broll.networklib.network.NetworkRegistry;
@@ -30,7 +31,7 @@ public class GameServer extends GameEndpoint<ServerSite, NetworkConnection> {
         }
     };
     private boolean open = false;
-    private ExecutorService threadPool;
+    private ThreadedListener threadedListener;
     private final static int DEFAULT_POOLSIZE = 10;
 
     public GameServer(IRegisterNetwork registerNetwork) {
@@ -50,9 +51,8 @@ public class GameServer extends GameEndpoint<ServerSite, NetworkConnection> {
         if (open) {
             shutdown();
         }
-        ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("Server-thread-%d").build();
-        threadPool = Executors.newFixedThreadPool(threadPoolSize, threadFactory);
-        server.addListener(new Listener.ThreadedListener(new ConnectionListener(), threadPool));
+        threadedListener = new ThreadedListener(new ConnectionListener(), "Server-worker-%d", threadPoolSize);
+        threadedListener.attach(server);
         server.start();
         try {
             server.bind(NetworkRegistry.TCP_PORT, NetworkRegistry.UDP_PORT);
@@ -66,8 +66,8 @@ public class GameServer extends GameEndpoint<ServerSite, NetworkConnection> {
     @Override
     public void shutdown() {
         server.stop();
-        if (threadPool != null) {
-            threadPool.shutdown();
+        if (threadedListener != null) {
+            threadedListener.remove(server);
         }
         open = false;
     }
