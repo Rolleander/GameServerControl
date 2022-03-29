@@ -60,7 +60,7 @@ public class BasicClientSite extends ClientSite {
 
 }
 ```
-The PackageReceiver annotation marks the method as a receiver. Receiver methods must have exactly one argument with the type of the network class they want to handle.
+The PackageReceiver annotation marks the method as a receiver. Receiver methods must have exactly one argument with the type of the network class they want to handle. Every ClientSite can call the method getClient(), which provides access to the client for sending packages.
 
 Extending the previous example, lets add the new site to the client:
 ```java
@@ -127,7 +127,6 @@ public class BasicExample {
     }
 
     private static class BasicServerSite extends ServerSite{
-
         @Override
         public void onConnect(NetworkConnection connection) {
             super.onConnect(connection);
@@ -154,11 +153,38 @@ public class BasicExample {
 
 }
 ```
-
+It should be clear now how to setup a basic server & client and what Sites are. 
 
 ## Lobby Network Setup
 
+A huge part of this library is its lobby handling. Lobbies are rooms on the server which contain players and eventually run a game instance. The usual lobby-flow looks like this: 
+1. A new client connects to the server
+1. The client lists the open lobbies on the server
+1.  After entering a player-name, the client joins one of the lobbies or creates a new one
+1. When a lobby is full or all its players are ready the game starts
+1. The lobby is locked, no new players can join 
+1. After the game is finished the lobby is disbanded, its players can join a different lobby or create a new one 
+
+Since lots of games use that lobby behavior, why start from scratch? 
+The LobbyGaneServer and LobbyGameClient classes provide most of that out of the box and are implemented themselves with Sites. With them we can easily organize players in lobbies and create a isolated context for our gamelogic. 
+
 ###### Lobby Client
+The LobbyGameClient has additional methods to list, create and connect to lobbies. All async methods return a CompletableFuture with the result. Below is an example listing the lobbies of a server and connecting to the first one found.
+```java
+String playerName = "Peter";
+LobbyGameClient client = new LobbyGameClient(new LobbyNetworkRegistry());
+client.listLobbies("localhost").thenAccept(lobbies -> {
+            System.out.println("# of listed lobbies: " + lobbies.getLobbies().size());
+            GameLobby lobby = lobbies.getLobbies().get(0);
+            client.joinLobby(lobby, playerName);
+}).exceptionally(exc -> {
+            System.out.println("Failed to list lobbies: " + exc.getMessage());
+            return null;
+});
+```
+Site classes extend from LobbyClientSite instead of ClientSite. It comes with new methods to access the lobby-context:
+- getLobby() : returns the currently joined lobby, or null 
+- getPlayer(): returns our player of the lobby (Same as getLobby().getMyPlayer()) 
 
 ###### Lobby Server
 
