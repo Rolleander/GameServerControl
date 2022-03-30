@@ -66,13 +66,13 @@ public class GameServer extends GameEndpoint<ServerSite, NetworkConnection> {
     @Override
     public void shutdown() {
         server.stop();
-        if (threadedListener != null) {
-            threadedListener.remove(server);
-        }
         try {
             server.dispose();
         } catch (IOException e) {
             Log.error("Failed to dispose server", e);
+        }
+        if (threadedListener != null) {
+            threadedListener.remove(server);
         }
         open = false;
     }
