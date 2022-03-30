@@ -1,5 +1,7 @@
 # LobbyGameServer
 
+![](https://github.com/Rolleander/GameServerControl/actions/workflows/gradle.yml/badge.svg)
+
 Java network library that helps creating complex server and client logic with a clean design and lots of features out of the box: 
 - Simple classes are used as package data, no parsing or formatting into messages needed
 - "Sites" are classes that implement a part of the client/server behavior and can be added and removed to a running endpoint

@@ -87,6 +87,7 @@ public abstract class NetworkTest<L extends ILobbyData, P extends ILobbyData> {
     public void dropPackages() {
         dropClientsPackages();
         dropServerPackages();
+        sleep();
     }
 
     public void dropServerPackages() {
@@ -110,6 +111,7 @@ public abstract class NetworkTest<L extends ILobbyData, P extends ILobbyData> {
     }
 
     public ServerLobby<L, P> openGameLobby(L data, String name) {
+        sleep();
         ServerLobby<L, P> lobby = gameServer.getLobbyHandler().openLobby(name);
         lobby.setData(data);
         return lobby;

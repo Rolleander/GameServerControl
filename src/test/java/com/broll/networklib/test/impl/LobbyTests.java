@@ -8,7 +8,9 @@ import com.broll.networklib.server.impl.Player;
 import com.broll.networklib.server.impl.ServerLobby;
 import com.broll.networklib.test.NetworkTest;
 
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 import java.util.concurrent.ExecutionException;
 
@@ -16,6 +18,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class LobbyTests extends NetworkTest {
 
     @Override
@@ -120,6 +123,7 @@ public class LobbyTests extends NetworkTest {
         ServerLobby lobby = openGameLobby(null, "TestLobby");
         lobby.setPlayerLimit(1);
         LobbyGameClient peter = testClient("Peter", lobby);
+        sleep();
         //client should not be able to join
         expectFailure(() -> testClient("Pan", lobby), "java.util.concurrent.ExecutionException: com.broll.networklib.network.NetworkException: java.util.concurrent.ExecutionException: java.lang.Exception: Could not join lobby: null");
         assertEquals(1, lobby.getPlayers().size());
@@ -132,15 +136,15 @@ public class LobbyTests extends NetworkTest {
         LobbyGameClient peter = testClient("Peter", lobby);
         lobby.lock();
         peter.shutdown();
+        sleep();
         assertEquals(1, lobby.getPlayers().size());
         assertEquals(false, lobby.getPlayer(0).isOnline());
-
         //another player should not be able to reconnect
         expectFailure(() -> waitFor(testClient("Hans").reconnectCheck("localhost")),
                 "java.util.concurrent.ExecutionException: com.broll.networklib.network.NetworkException: java.util.concurrent.ExecutionException: java.lang.Exception: Could not reconnect player");
         //reconnect correct player
+        sleep();
         peter = testClient("Peter");
-
         GameLobby gameLobby = (GameLobby) waitFor(peter.reconnectCheck("localhost"));
         assertEquals(lobby.getId(), gameLobby.getLobbyId());
         assertEquals(1, lobby.getPlayers().size());

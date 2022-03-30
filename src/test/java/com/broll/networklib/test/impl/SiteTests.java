@@ -88,17 +88,29 @@ public class SiteTests {
         server.setUnknownMessageReceiver(message -> {
             futureUnknown.complete(message);
         });
-        ServerSite site = new ServerSite() {
-            @PackageReceiver
-            public void received(TestPackage testPackage) {
-                futureMessage.complete(testPackage);
-            }
-        };
+        ServerSite site = new TestServerSite(futureMessage);
         server.register(site);
         client.sendTCP(new TestPackage());
         assertEquals(TestPackage.class, futureMessage.get().getClass());
         server.unregister(site);
         client.sendTCP(new TestPackage());
         assertEquals(TestPackage.class, futureUnknown.get().getClass());
+    }
+
+    private static class TestServerSite extends ServerSite {
+        private CompletableFuture futureMessage;
+
+        public TestServerSite() {
+            super();
+        }
+
+        public TestServerSite(CompletableFuture futureMessage) {
+            this.futureMessage = futureMessage;
+        }
+
+        @PackageReceiver
+        public void received(TestPackage testPackage) {
+            futureMessage.complete(testPackage);
+        }
     }
 }

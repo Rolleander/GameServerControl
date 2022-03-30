@@ -34,6 +34,12 @@ public class TestServer extends GameServer {
         return (T) pkg.pkg;
     }
 
+    @Override
+    public void shutdown() {
+        super.shutdown();
+
+    }
+
     public void dropReceivedPackages() {
         received.clear();
     }

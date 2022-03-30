@@ -44,6 +44,7 @@ public class MultiSitesHandler<T extends NetworkSite, C> extends AbstractSitesHa
     public Map<Class<T>, T> getSiteInstances(C connection) {
         Map<Class<T>, T> instances = new HashMap<>();
         siteModificationLock.readLock().lock();
+        Log.info("get site instances for "+connection+"  is "+activeSites.get(connection));
         instances.putAll(activeSites.get(connection));
         siteModificationLock.readLock().unlock();
         return instances;

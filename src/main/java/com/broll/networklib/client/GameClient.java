@@ -70,6 +70,11 @@ public class GameClient extends GameEndpoint<ClientSite, GameClient.ClientConnec
     public void shutdown() {
         client.close();
         threadedListener.remove(client);
+        try {
+            client.dispose();
+        } catch (IOException e) {
+            Log.error("Failed to dispose client", e);
+        }
     }
 
     @Override
