@@ -30,16 +30,16 @@ public class LobbyConnectionSite extends LobbyClientSite {
             return;
         }
         LobbyChange.updateLobby(lobby, lobbyUpdate);
-        LobbyUpdateListener listener = lobby.getLobbyUpdateListener();
+        ILobbyUpdateListener listener = lobby.getLobbyUpdateListener();
         if (listener != null) {
-            listener.lobbyUpdated();
+            listener.lobbyUpdated(lobby);
         }
     }
 
     @PackageReceiver
     public void receive(NT_ChatMessage chat) {
         if (lobby != null) {
-            ChatMessageListener listener = lobby.getChatMessageListener();
+            IChatMessageListener listener = lobby.getChatMessageListener();
             if (listener != null) {
                 if (chat.from == null) {
                     //message from system
@@ -56,7 +56,7 @@ public class LobbyConnectionSite extends LobbyClientSite {
     public void receive(NT_LobbyKicked kicked) {
         //player was removed
         if (lobby != null && lobby.getLobbyUpdateListener() != null) {
-            lobby.getLobbyUpdateListener().kickedFromLobby();
+            lobby.getLobbyUpdateListener().kickedFromLobby(lobby);
         }
         resetLobby();
     }
@@ -65,7 +65,7 @@ public class LobbyConnectionSite extends LobbyClientSite {
     public void receive(NT_LobbyClosed closed) {
         //lobby was closed
         if (lobby != null && lobby.getLobbyUpdateListener() != null) {
-            lobby.getLobbyUpdateListener().closed();
+            lobby.getLobbyUpdateListener().closed(lobby);
         }
         resetLobby();
     }
@@ -83,7 +83,7 @@ public class LobbyConnectionSite extends LobbyClientSite {
     public void onDisconnect() {
         //lost connection to server
         if (lobby != null && lobby.getLobbyUpdateListener() != null) {
-            lobby.getLobbyUpdateListener().disconnected();
+            lobby.getLobbyUpdateListener().disconnected(lobby);
         }
         resetLobby();
     }

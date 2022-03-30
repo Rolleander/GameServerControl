@@ -2,15 +2,14 @@ package com.broll.networklib.server;
 
 import com.broll.networklib.server.impl.LobbyHandler;
 import com.broll.networklib.server.impl.Player;
-import com.broll.networklib.server.impl.LobbySettings;
+import com.broll.networklib.server.impl.ILobbyData;
 import com.broll.networklib.server.impl.ServerLobby;
-import com.broll.networklib.site.MultiSitesHandler;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-public class LobbyServerSitesHandler<L extends LobbySettings, P extends LobbySettings> extends ServerSitesHandler {
+public class LobbyServerSitesHandler<L extends ILobbyData, P extends ILobbyData> extends ServerSitesHandler {
 
     private Map<Method, RestrictionType> receiverRestrictions = new HashMap<>();
 

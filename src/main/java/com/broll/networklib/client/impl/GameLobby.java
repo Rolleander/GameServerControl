@@ -29,9 +29,9 @@ public class GameLobby {
 
     private Map<Integer, LobbyPlayer> players = new HashMap<>();
 
-    private ChatMessageListener chatMessageListener;
+    private IChatMessageListener chatMessageListener;
 
-    private LobbyUpdateListener lobbyUpdateListener;
+    private ILobbyUpdateListener lobbyUpdateListener;
 
     private Object settings;
 
@@ -82,19 +82,19 @@ public class GameLobby {
         return getPlayer(getPlayerId());
     }
 
-    public void setChatMessageListener(ChatMessageListener chatMessageListener) {
+    public void setChatMessageListener(IChatMessageListener chatMessageListener) {
         this.chatMessageListener = chatMessageListener;
     }
 
-    public void setLobbyUpdateListener(LobbyUpdateListener lobbyUpdateListener) {
+    public void setLobbyUpdateListener(ILobbyUpdateListener lobbyUpdateListener) {
         this.lobbyUpdateListener = lobbyUpdateListener;
     }
 
-    LobbyUpdateListener getLobbyUpdateListener() {
+    ILobbyUpdateListener getLobbyUpdateListener() {
         return lobbyUpdateListener;
     }
 
-    ChatMessageListener getChatMessageListener() {
+    IChatMessageListener getChatMessageListener() {
         return chatMessageListener;
     }
 

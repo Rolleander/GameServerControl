@@ -1,6 +1,5 @@
-package com.broll.networklib.examples;
+package com.broll.networklib.examples.basic;
 
-import com.broll.networklib.PackageReceiver;
 import com.broll.networklib.server.NetworkConnection;
 import com.broll.networklib.server.ServerSite;
 

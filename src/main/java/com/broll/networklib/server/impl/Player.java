@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class Player<P extends LobbySettings> {
+public class Player<P extends ILobbyData> {
 
     private String name;
     private final int id;
@@ -15,7 +15,7 @@ public class Player<P extends LobbySettings> {
     private NetworkConnection connection;
     private ServerLobby serverLobby;
     private String authenticationKey;
-    private PlayerListener listener;
+    private IPlayerListener listener;
     private P data;
     private Map<String, Object> sharedData = new HashMap<>();
 
@@ -49,11 +49,11 @@ public class Player<P extends LobbySettings> {
         connection.sendUDP(object);
     }
 
-    public void setListener(PlayerListener listener) {
+    public void setListener(IPlayerListener listener) {
         this.listener = listener;
     }
 
-    PlayerListener getListener() {
+    IPlayerListener getListener() {
         return listener;
     }
 
@@ -101,11 +101,11 @@ public class Player<P extends LobbySettings> {
         return sharedData;
     }
 
-    public Object getSettings() {
+    private Object getSettings() {
         if (data == null) {
             return null;
         }
-        return data.getSettings();
+        return data.nt();
     }
 
     @Override

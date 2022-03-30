@@ -34,11 +34,15 @@ public class ThreadedListener {
 
     public void remove(Server server) {
         server.removeListener(listener);
-        this.threadPool.shutdown();
+        if (this.threadPool != null) {
+            this.threadPool.shutdown();
+        }
     }
 
     public void remove(Client client) {
         client.removeListener(listener);
-        this.threadPool.shutdown();
+        if (this.threadPool != null) {
+            this.threadPool.shutdown();
+        }
     }
 }

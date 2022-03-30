@@ -3,11 +3,11 @@ package com.broll.networklib.server;
 import com.broll.networklib.NetworkRegister;
 import com.broll.networklib.network.IRegisterNetwork;
 import com.broll.networklib.server.impl.ConnectionSite;
-import com.broll.networklib.server.impl.LobbyCloseListener;
+import com.broll.networklib.server.impl.ILobbyCloseListener;
 import com.broll.networklib.server.impl.LobbyHandler;
 import com.broll.networklib.server.impl.LobbySite;
 import com.broll.networklib.server.impl.Player;
-import com.broll.networklib.server.impl.LobbySettings;
+import com.broll.networklib.server.impl.ILobbyData;
 import com.broll.networklib.server.impl.PlayerRegister;
 import com.broll.networklib.server.impl.ServerLobby;
 import com.broll.networklib.site.SiteReceiver;
@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class LobbyGameServer<L extends LobbySettings, P extends LobbySettings> implements NetworkRegister {
+public class LobbyGameServer<L extends ILobbyData, P extends ILobbyData> implements NetworkRegister {
 
     private GameServer server;
     private LobbyHandler<L, P> lobbyHandler;
@@ -34,7 +34,7 @@ public class LobbyGameServer<L extends LobbySettings, P extends LobbySettings> i
         PlayerRegister playerRegister = new PlayerRegister();
         connectionSite = new ConnectionSite(name, playerRegister);
         LobbyServerSitesHandler<L, P> sitesHandler = new LobbyServerSitesHandler<>();
-        lobbyHandler = new LobbyHandler<>(new LobbyCloseListener<L, P>() {
+        lobbyHandler = new LobbyHandler<>(new ILobbyCloseListener<L, P>() {
             @Override
             public void closed(ServerLobby<L, P> lobby, List<Player<P>> players) {
                 connectionSite.closedLobby(lobby, players);

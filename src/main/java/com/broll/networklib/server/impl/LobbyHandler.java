@@ -16,17 +16,17 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class LobbyHandler<L extends LobbySettings, P extends LobbySettings> {
+public class LobbyHandler<L extends ILobbyData, P extends ILobbyData> {
 
     private final static Logger Log = LoggerFactory.getLogger(LobbyHandler.class);
     private AtomicInteger idCounter = new AtomicInteger();
     private Map<Integer, ServerLobby<L, P>> lobbies = new ConcurrentHashMap<>();
-    private LobbyCloseListener listener;
+    private ILobbyCloseListener listener;
     private ILobbyCreationRequest<L, P> lobbyCreationRequestHandler = (player, lobbyName, settings) -> this.openLobby(lobbyName);
     private PlayerRegister playerRegister;
     private LobbyServerSitesHandler sitesHandler;
 
-    public LobbyHandler(LobbyCloseListener listener, PlayerRegister playerRegister, LobbyServerSitesHandler sitesHandler) {
+    public LobbyHandler(ILobbyCloseListener listener, PlayerRegister playerRegister, LobbyServerSitesHandler sitesHandler) {
         this.listener = listener;
         this.playerRegister = playerRegister;
         this.sitesHandler = sitesHandler;

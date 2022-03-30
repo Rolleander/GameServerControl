@@ -1,15 +1,11 @@
 package com.broll.networklib.server.impl;
 
 import com.broll.networklib.server.NetworkConnection;
-import com.broll.networklib.site.MultiSitesHandler;
 import com.broll.networklib.site.SingleSitesHandler;
 
 import java.util.Arrays;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
-public class BotConnection<P extends LobbySettings> extends NetworkConnection {
+public class BotConnection<P extends ILobbyData> extends NetworkConnection {
 
     private SingleSitesHandler<BotSite, Object> sites = new SingleSitesHandler<>();
     private BotEndpoint endpoint;

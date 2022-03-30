@@ -1,7 +1,6 @@
 package com.broll.networklib.client.impl;
 
 import com.broll.networklib.client.GameClient;
-import com.broll.networklib.client.auth.LastConnection;
 import com.broll.networklib.network.nt.NT_LobbyInformation;
 import com.broll.networklib.network.nt.NT_LobbyJoined;
 import com.broll.networklib.network.nt.NT_LobbyPlayerInfo;
@@ -77,17 +76,17 @@ public final class LobbyChange {
         LobbyPlayer player = new LobbyPlayer(playerInfo.id, lobby);
         updatePlayer(player, playerInfo);
         lobby.getPlayerMap().put(playerInfo.id, player);
-        LobbyUpdateListener listener = lobby.getLobbyUpdateListener();
+        ILobbyUpdateListener listener = lobby.getLobbyUpdateListener();
         if (listener != null) {
-            listener.playerJoined(player);
+            listener.playerJoined(lobby, player);
         }
     }
 
     private static void playerLeft(GameLobby lobby, LobbyPlayer player, int id) {
         lobby.getPlayerMap().remove(id);
-        LobbyUpdateListener listener = lobby.getLobbyUpdateListener();
+        ILobbyUpdateListener listener = lobby.getLobbyUpdateListener();
         if (listener != null) {
-            listener.playerLeft(player);
+            listener.playerLeft(lobby, player);
         }
     }
 

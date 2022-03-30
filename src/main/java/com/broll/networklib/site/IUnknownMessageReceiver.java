@@ -1,6 +1,6 @@
 package com.broll.networklib.site;
 
-public interface UnknownMessageReceiver {
+public interface IUnknownMessageReceiver {
 
     void unknownMessage(Object o);
 }

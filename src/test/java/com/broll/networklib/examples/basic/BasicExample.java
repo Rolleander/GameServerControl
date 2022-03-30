@@ -1,4 +1,4 @@
-package com.broll.networklib.examples;
+package com.broll.networklib.examples.basic;
 
 import com.broll.networklib.NetworkRegister;
 import com.broll.networklib.PackageReceiver;

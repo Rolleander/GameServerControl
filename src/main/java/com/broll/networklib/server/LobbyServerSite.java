@@ -3,14 +3,11 @@ package com.broll.networklib.server;
 import com.broll.networklib.network.AnnotationScanner;
 import com.broll.networklib.server.impl.LobbyHandler;
 import com.broll.networklib.server.impl.Player;
-import com.broll.networklib.server.impl.LobbySettings;
+import com.broll.networklib.server.impl.ILobbyData;
 import com.broll.networklib.server.impl.ServerLobby;
-import com.esotericsoftware.kryo.Kryo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.commons.lang3.ClassUtils;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -19,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public abstract class LobbyServerSite<L extends LobbySettings, P extends LobbySettings> extends ServerSite {
+public abstract class LobbyServerSite<L extends ILobbyData, P extends ILobbyData> extends ServerSite {
 
     private final static Logger Log = LoggerFactory.getLogger(LobbyServerSite.class);
     protected LobbyHandler<L, P> lobbyHandler;

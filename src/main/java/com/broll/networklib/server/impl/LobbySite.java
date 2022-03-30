@@ -7,7 +7,7 @@ import com.broll.networklib.server.ConnectionRestriction;
 import com.broll.networklib.server.LobbyServerSite;
 import com.broll.networklib.server.RestrictionType;
 
-public class LobbySite<L extends LobbySettings, P extends LobbySettings> extends LobbyServerSite<L, P> {
+public class LobbySite<L extends ILobbyData, P extends ILobbyData> extends LobbyServerSite<L, P> {
 
     @PackageReceiver
     @ConnectionRestriction(RestrictionType.IN_LOBBY)

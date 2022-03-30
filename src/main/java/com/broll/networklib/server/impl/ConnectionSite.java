@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public class ConnectionSite<L extends LobbySettings, P extends LobbySettings> extends LobbyServerSite<L, P> {
+public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends LobbyServerSite<L, P> {
 
     private final static Logger Log = LoggerFactory.getLogger(ConnectionSite.class);
     private PlayerRegister playerRegister;

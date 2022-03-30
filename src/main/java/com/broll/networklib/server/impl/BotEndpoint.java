@@ -1,8 +1,6 @@
 package com.broll.networklib.server.impl;
 
 import com.broll.networklib.GameEndpoint;
-import com.broll.networklib.client.ClientSite;
-import com.broll.networklib.network.IRegisterNetwork;
 import com.broll.networklib.server.LobbyServerSitesHandler;
 import com.broll.networklib.server.ServerSite;
 import com.esotericsoftware.kryo.Kryo;
@@ -12,7 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class BotEndpoint<L extends LobbySettings, P extends LobbySettings> extends GameEndpoint<BotSite, Object> {
+public class BotEndpoint<L extends ILobbyData, P extends ILobbyData> extends GameEndpoint<BotSite, Object> {
 
     private final static int BOT_DELAY = 100;
     private LobbyServerSitesHandler<L, P> sitesHandler;

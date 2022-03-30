@@ -16,7 +16,6 @@ import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -31,13 +30,13 @@ public abstract class AbstractSitesHandler<T extends NetworkSite, C> {
      */
     protected final static List<Class<? extends NetworkSite>> INTERNAL_SITES = Lists.newArrayList(ConnectionSite.class, LobbySite.class, LobbyConnectionSite.class);
 
-    private final static UnknownMessageReceiver DEFAULT_UNKNOWN_MESSAGE_RECEIVER = (message) -> {
+    private final static IUnknownMessageReceiver DEFAULT_UNKNOWN_MESSAGE_RECEIVER = (message) -> {
         Log.error("No receiverMethod registered for network object " + message);
     };
 
     protected Map<Class<T>, T> sites = new HashMap<>();
 
-    private UnknownMessageReceiver unknownMessageReceiver = DEFAULT_UNKNOWN_MESSAGE_RECEIVER;
+    private IUnknownMessageReceiver unknownMessageReceiver = DEFAULT_UNKNOWN_MESSAGE_RECEIVER;
 
     protected Map<Class, ObjectTargetContainer> siteRoutes = new HashMap<>();
 
@@ -45,15 +44,13 @@ public abstract class AbstractSitesHandler<T extends NetworkSite, C> {
 
     private SiteReceiver<T, C> siteReceiver = new SiteReceiver<>();
 
-    protected final Kryo kryo = new Kryo();
-
     public abstract Map<Class<T>, T> getSiteInstances(C connection);
 
     public void setReceiver(SiteReceiver<T, C> siteReceiver) {
         this.siteReceiver = siteReceiver;
     }
 
-    public void setUnknownMessageReceiver(UnknownMessageReceiver unknownMessageReceiver) {
+    public void setUnknownMessageReceiver(IUnknownMessageReceiver unknownMessageReceiver) {
         this.unknownMessageReceiver = unknownMessageReceiver;
     }
 
@@ -102,7 +99,7 @@ public abstract class AbstractSitesHandler<T extends NetworkSite, C> {
         });
     }
 
-    public final void pass(C connectionContext, Object sentObject, ReceivingSites<T> receivingSites) {
+    public final void pass(C connectionContext, Object sentObject, IReceivingSites<T> IReceivingSites) {
         siteModificationLock.readLock().lock();
         ObjectTargetContainer container = siteRoutes.get(sentObject.getClass());
         siteModificationLock.readLock().unlock();
@@ -114,7 +111,7 @@ public abstract class AbstractSitesHandler<T extends NetworkSite, C> {
             return;
         }
         Collection<T> sites = container.getTargetInstances(connectionContext);
-        receivingSites.receivers(sites);
+        IReceivingSites.receivers(sites);
         container.pass(sites, connectionContext, sentObject);
     }
 

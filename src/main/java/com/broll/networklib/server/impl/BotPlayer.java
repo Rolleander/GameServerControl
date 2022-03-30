@@ -3,7 +3,7 @@ package com.broll.networklib.server.impl;
 import com.broll.networklib.network.nt.NT_LobbyPlayerInfo;
 import com.esotericsoftware.minlog.Log;
 
-public class BotPlayer<P extends LobbySettings> extends Player<P> {
+public class BotPlayer<P extends ILobbyData> extends Player<P> {
 
     private final static String KEY_PREFIX = "BOT_";
 

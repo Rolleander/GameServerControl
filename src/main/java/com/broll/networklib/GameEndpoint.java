@@ -5,15 +5,13 @@ import com.broll.networklib.network.NetworkRegistry;
 import com.broll.networklib.network.INetworkRequestAttempt;
 import com.broll.networklib.site.AbstractSitesHandler;
 import com.broll.networklib.site.NetworkSite;
-import com.broll.networklib.site.ReceivingSites;
+import com.broll.networklib.site.IReceivingSites;
 import com.broll.networklib.site.SiteReceiver;
-import com.broll.networklib.site.UnknownMessageReceiver;
+import com.broll.networklib.site.IUnknownMessageReceiver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 public abstract class GameEndpoint<T extends NetworkSite, C> implements NetworkRegister {
@@ -85,15 +83,15 @@ public abstract class GameEndpoint<T extends NetworkSite, C> implements NetworkR
         sites.discardConnection(connectionContext);
     }
 
-    public void setUnknownMessageReceiver(UnknownMessageReceiver receiver) {
+    public void setUnknownMessageReceiver(IUnknownMessageReceiver receiver) {
         sites.setUnknownMessageReceiver(receiver);
     }
 
-    protected void passAllSites(C connectionContext, ReceivingSites<T> receivers) {
+    protected void passAllSites(C connectionContext, IReceivingSites<T> receivers) {
         receivers.receivers(sites.getSiteInstances(connectionContext).values());
     }
 
-    protected void passReceived(C connectionContext, Object object, ReceivingSites<T> receiverSites) {
+    protected void passReceived(C connectionContext, Object object, IReceivingSites<T> receiverSites) {
         sites.pass(connectionContext, object, receiverSites);
     }
 

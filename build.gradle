@@ -9,11 +9,13 @@
 plugins {
     // Apply the java-library plugin to add support for Java Library
     id 'java-library'
+    id 'maven-publish'
 }
 
 repositories {
     // Use jcenter for resolving your dependencies.
     // You can declare any Maven/Ivy/file repository here.
+    mavenLocal()
     jcenter()
 }
 
@@ -24,7 +26,7 @@ dependencies {
     // https://mvnrepository.com/artifact/kryonet/kryonet-all
     compile 'com.dorkbox:MinLog-SLF4J:1.12'
     compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.29'
-    compile group: 'com.esotericsoftware', name: 'kryonet', version: '2.22.0-RC1'
+    api group: 'com.esotericsoftware', name: 'kryonet', version: '2.22.0-RC1'
     implementation("com.google.guava:guava:28.2-jre")
 
     implementation "com.dorkbox:Annotations:2.14"
@@ -49,4 +51,15 @@ dependencies {
 javadoc {
     source = sourceSets.main.allJava
     classpath = configurations.compile
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'com.broll'
+            artifactId = 'networklib'
+            version = '1.0'
+            from components.java
+        }
+    }
 }

@@ -6,10 +6,9 @@ import com.broll.networklib.client.impl.GameLobby;
 import com.broll.networklib.network.IRegisterNetwork;
 import com.broll.networklib.server.LobbyGameServer;
 import com.broll.networklib.server.NetworkConnection;
-import com.broll.networklib.server.impl.LobbySettings;
+import com.broll.networklib.server.impl.ILobbyData;
 import com.broll.networklib.server.impl.ServerLobby;
-import com.broll.networklib.site.NetworkSite;
-import com.broll.networklib.site.SiteReceiver;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +16,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -29,7 +27,7 @@ import java.util.concurrent.Executors;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-public abstract class NetworkTest<L extends LobbySettings, P extends LobbySettings> {
+public abstract class NetworkTest<L extends ILobbyData, P extends ILobbyData> {
     private final static Logger Log = LoggerFactory.getLogger(NetworkTest.class);
 
     private final static int TIMEOUT = 5000;

@@ -20,7 +20,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
+public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
 
     private final static Logger Log = LoggerFactory.getLogger(ServerLobby.class);
 
@@ -44,9 +44,9 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
 
     private boolean autoClose = true;
 
-    private ServerLobbyListener listener;
+    private IServerLobbyListener listener;
 
-    private LobbyCloseListener<L, P> closeListener;
+    private ILobbyCloseListener<L, P> closeListener;
 
     private String name;
 
@@ -54,7 +54,7 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
 
     private Map<String, Object> sharedData = new HashMap<>();
 
-    ServerLobby(LobbyHandler<L, P> lobbyHandler, String name, int id, LobbyCloseListener<L, P> closeListener) {
+    ServerLobby(LobbyHandler<L, P> lobbyHandler, String name, int id, ILobbyCloseListener<L, P> closeListener) {
         this.lobbyHandler = lobbyHandler;
         this.name = name;
         this.id = id;
@@ -101,7 +101,7 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
         return data;
     }
 
-    public void setListener(ServerLobbyListener listener) {
+    public void setListener(IServerLobbyListener listener) {
         this.listener = listener;
     }
 
@@ -310,12 +310,12 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
         return Collections.unmodifiableCollection(players);
     }
 
-    public Player<P> getPlayer(int id) {
-        return players.stream().filter(player -> player.getId() == id).findFirst().orElse(null);
+    public List<P> getPlayersData() {
+        return getPlayers().stream().map(Player::getData).collect(Collectors.toList());
     }
 
-    public Stream<P> streamData() {
-        return getPlayers().stream().map(Player::getData);
+    public Player<P> getPlayer(int id) {
+        return players.stream().filter(player -> player.getId() == id).findFirst().orElse(null);
     }
 
     public int getId() {
@@ -354,7 +354,7 @@ public class ServerLobby<L extends LobbySettings, P extends LobbySettings> {
         if (data == null) {
             return null;
         }
-        return data.getSettings();
+        return data.nt();
     }
 
     public Player<P> getOwner() {
