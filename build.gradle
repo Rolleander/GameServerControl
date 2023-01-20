@@ -24,8 +24,8 @@ dependencies {
 
     // api 'com.broll.networklib'
     // https://mvnrepository.com/artifact/kryonet/kryonet-all
-    compile 'com.dorkbox:MinLog-SLF4J:1.12'
-    compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.29'
+    implementation 'com.dorkbox:MinLog-SLF4J:1.12'
+    implementation group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.29'
     api group: 'com.esotericsoftware', name: 'kryonet', version: '2.22.0-RC1'
     implementation("com.google.guava:guava:28.2-jre")
 
@@ -50,7 +50,6 @@ dependencies {
 
 javadoc {
     source = sourceSets.main.allJava
-    classpath = configurations.compile
 }
 
 publishing {
