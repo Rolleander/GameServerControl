@@ -9,6 +9,7 @@ import com.broll.networklib.site.SingleSitesHandler;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
+import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.kryonet.Listener;
 
 import org.slf4j.Logger;
@@ -34,6 +35,7 @@ public class GameClient extends GameEndpoint<ClientSite, GameClient.ClientConnec
         super(registerNetwork, new SingleSitesHandler<>());
         init();
         this.threadedListener = new ThreadedListener(new ClientListener(), "Client-worker", 1);
+        this.threadedListener.attach(client);
     }
 
     public void connect(String ip) {
@@ -49,7 +51,6 @@ public class GameClient extends GameEndpoint<ClientSite, GameClient.ClientConnec
             }
         }
         try {
-            threadedListener.attach(client);
             client.start();
             client.connect(CONNECTION_TIMEOUT, ip, NetworkRegistry.TCP_PORT, NetworkRegistry.UDP_PORT);
             Log.info("Client connected to server " + ip);
@@ -111,6 +112,9 @@ public class GameClient extends GameEndpoint<ClientSite, GameClient.ClientConnec
 
         @Override
         public void received(Connection c, Object o) {
+            if(o instanceof FrameworkMessage){
+                return;
+            }
             GameClient.this.received(o);
         }
     }

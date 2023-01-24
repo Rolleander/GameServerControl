@@ -5,21 +5,17 @@ import com.broll.networklib.ThreadedListener;
 import com.broll.networklib.network.IRegisterNetwork;
 import com.broll.networklib.network.NetworkException;
 import com.broll.networklib.network.NetworkRegistry;
-import com.broll.networklib.network.nt.NT_ReconnectCheck;
 import com.broll.networklib.site.MultiSitesHandler;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Connection;
+import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 public class GameServer extends GameEndpoint<ServerSite, NetworkConnection> {
 
@@ -115,6 +111,9 @@ public class GameServer extends GameEndpoint<ServerSite, NetworkConnection> {
 
         @Override
         public void received(Connection c, Object o) {
+            if(o instanceof FrameworkMessage){
+                return;
+            }
             NetworkConnection connection = (NetworkConnection) c;
             GameServer.this.received(connection, o);
         }

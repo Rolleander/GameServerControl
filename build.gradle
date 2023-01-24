@@ -52,6 +52,10 @@ javadoc {
     source = sourceSets.main.allJava
 }
 
+java {
+    withSourcesJar()
+}
+
 publishing {
     publications {
         maven(MavenPublication) {
