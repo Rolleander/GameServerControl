@@ -21,8 +21,9 @@ public final class LobbyChange {
         return lobby;
     }
 
-    public static GameLobby reconnectedLobby(NT_LobbyReconnected reconnected) {
+    public static GameLobby reconnectedLobby(GameClient client, NT_LobbyReconnected reconnected) {
         GameLobby lobby = new GameLobby();
+        lobby.initClient(client);
         updateLobby(lobby, reconnected);
         lobby.playerJoined(reconnected.playerId);
         return lobby;

@@ -38,7 +38,7 @@ public class ReconnectTask extends AbstractClientTask<GameLobby> {
 
         @PackageReceiver
         public void reconnected(NT_LobbyReconnected reconnected) {
-            complete(LobbyChange.reconnectedLobby(reconnected));
+            complete(LobbyChange.reconnectedLobby(getClient(),reconnected));
         }
 
         @PackageReceiver
