@@ -145,6 +145,7 @@ public class LobbyTests extends NetworkTest {
         //reconnect correct player
         sleep();
         peter = testClient("Peter");
+        sleep();
         GameLobby gameLobby = (GameLobby) waitFor(peter.reconnectCheck("localhost"));
         assertEquals(lobby.getId(), gameLobby.getLobbyId());
         assertEquals(1, lobby.getPlayers().size());

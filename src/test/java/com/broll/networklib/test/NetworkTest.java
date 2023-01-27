@@ -35,7 +35,6 @@ public abstract class NetworkTest<L extends ILobbyData, P extends ILobbyData> {
     protected TestServer server;
     protected LobbyGameServer<L, P> gameServer;
     protected Map<LobbyGameClient, TestClientData> clients = new HashMap<>();
-    private ExecutorService executor = Executors.newSingleThreadExecutor();
 
     protected abstract IRegisterNetwork registerNetwork();
 
