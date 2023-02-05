@@ -1,6 +1,5 @@
 package com.broll.networklib.site;
 
-import com.beust.jcommander.internal.Lists;
 import com.broll.networklib.PackageReceiver;
 import com.broll.networklib.client.impl.LobbyConnectionSite;
 import com.broll.networklib.network.AnnotationScanner;
@@ -8,6 +7,8 @@ import com.broll.networklib.server.impl.ConnectionSite;
 import com.broll.networklib.server.impl.LobbySite;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.FrameworkMessage;
+import com.google.common.collect.Lists;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

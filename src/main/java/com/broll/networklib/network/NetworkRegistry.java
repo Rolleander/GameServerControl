@@ -1,8 +1,21 @@
 package com.broll.networklib.network;
 
 import com.broll.networklib.NetworkRegister;
+import com.broll.networklib.network.nt.NT_ChatMessage;
+import com.broll.networklib.network.nt.NT_LobbyClosed;
+import com.broll.networklib.network.nt.NT_LobbyCreate;
 import com.broll.networklib.network.nt.NT_LobbyInformation;
+import com.broll.networklib.network.nt.NT_LobbyJoin;
+import com.broll.networklib.network.nt.NT_LobbyJoined;
+import com.broll.networklib.network.nt.NT_LobbyKick;
+import com.broll.networklib.network.nt.NT_LobbyKicked;
+import com.broll.networklib.network.nt.NT_LobbyLock;
+import com.broll.networklib.network.nt.NT_LobbyNoJoin;
 import com.broll.networklib.network.nt.NT_LobbyPlayerInfo;
+import com.broll.networklib.network.nt.NT_LobbyReconnected;
+import com.broll.networklib.network.nt.NT_LobbyUpdate;
+import com.broll.networklib.network.nt.NT_ReconnectCheck;
+import com.broll.networklib.network.nt.NT_ServerInformation;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.serializers.MapSerializer;
 import org.slf4j.Logger;
@@ -30,16 +43,24 @@ public final class NetworkRegistry {
     }
 
     public static void registerStandard(NetworkRegister network) {
-        network.registerNetworkPackage(NT_PACKAGE);
+        network.registerNetworkType(NT_ChatMessage.class);
+        network.registerNetworkType(NT_LobbyClosed.class);
+        network.registerNetworkType(NT_LobbyCreate.class);
+        network.registerNetworkType(NT_LobbyInformation.class);
+        network.registerNetworkType(NT_LobbyJoin.class);
+        network.registerNetworkType(NT_LobbyJoined.class);
+        network.registerNetworkType(NT_LobbyKick.class);
+        network.registerNetworkType(NT_LobbyKicked.class);
+        network.registerNetworkType(NT_LobbyLock.class);
+        network.registerNetworkType(NT_LobbyNoJoin.class);
+        network.registerNetworkType(NT_LobbyPlayerInfo.class);
+        network.registerNetworkType(NT_LobbyReconnected.class);
+        network.registerNetworkType(NT_LobbyUpdate.class);
+        network.registerNetworkType(NT_ReconnectCheck.class);
+        network.registerNetworkType(NT_ServerInformation.class);
         network.registerNetworkType(NT_LobbyInformation[].class);
         network.registerNetworkType(NT_LobbyPlayerInfo[].class);
         network.registerNetworkType(Object.class);
-        //   Kryo kryo = network.getKryo();
-        //    MapSerializer serializer = new MapSerializer();
-        //     serializer.setKeyClass(String.class, kryo.getSerializer(String.class));
-        //     serializer.setValueClass(Object.class, kryo.getSerializer(Object.class));
-        //     serializer.setKeysCanBeNull(false);
-        //     kryo.register(HashMap.class, serializer);
     }
 
     public static void register(Kryo kryo, String packagePath) {
