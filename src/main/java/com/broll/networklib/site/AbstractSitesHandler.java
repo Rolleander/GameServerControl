@@ -90,9 +90,9 @@ public abstract class AbstractSitesHandler<T extends NetworkSite, C> {
 
     private void initRoute(T site) {
         AnnotationScanner.findAnnotatedMethods(site, PackageReceiver.class).forEach(m -> {
-            if (m.getParameterCount() == 1) {
-                Parameter p = m.getParameters()[0];
-                Class type = p.getType();
+            Class<?>[] types = m.getParameterTypes();
+            if (types.length== 1) {
+                Class type = types[0];
                 registerRoute(type, site, m);
             } else {
                 Log.error("PackageReceiver method " + m + " of object " + site + " does not have correct amount of parameters (1)");
