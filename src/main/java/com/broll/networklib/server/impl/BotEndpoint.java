@@ -4,10 +4,12 @@ import com.broll.networklib.GameEndpoint;
 import com.broll.networklib.server.LobbyServerSitesHandler;
 import com.broll.networklib.server.ServerSite;
 import com.esotericsoftware.kryo.Kryo;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.util.Collection;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 public class BotEndpoint<L extends ILobbyData, P extends ILobbyData> extends GameEndpoint<BotSite, Object> {
@@ -21,7 +23,9 @@ public class BotEndpoint<L extends ILobbyData, P extends ILobbyData> extends Gam
         super(null, sitesHandler);
         this.sitesHandler = sitesHandler;
         this.botConnection = botConnection;
-        this.executor = Executors.newSingleThreadScheduledExecutor();
+        int id = botConnection.getBot().getId();
+        ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("bot-"+id).build();
+        this.executor = Executors.newSingleThreadScheduledExecutor(threadFactory);
         sitesHandler.initConnection(botConnection);
     }
 
