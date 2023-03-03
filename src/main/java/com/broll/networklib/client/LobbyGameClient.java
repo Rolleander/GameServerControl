@@ -34,8 +34,14 @@ public class LobbyGameClient implements NetworkRegister {
     private ClientAuthenticationKey clientAuthenticationKey = ClientAuthenticationKey.fromFileCache();
     private GameLobby connectedLobby;
 
+    private String version;
+
     public LobbyGameClient(IRegisterNetwork registerNetwork) {
         this(new GameClient(registerNetwork));
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     public LobbyGameClient(GameClient client) {
@@ -132,11 +138,11 @@ public class LobbyGameClient implements NetworkRegister {
     }
 
     public CompletableFuture<GameLobby> joinLobby(GameLobby lobby, String playerName) {
-        return updateLobby(runTask(new JoinLobbyTask(lobby, playerName, clientAuthenticationKey)));
+        return updateLobby(runTask(new JoinLobbyTask(lobby, playerName, clientAuthenticationKey, version)));
     }
 
     public CompletableFuture<GameLobby> createLobby(String playerName, Object lobbySettings) {
-        return updateLobby(runTask(new CreateLobbyTask(playerName, lobbySettings, clientAuthenticationKey)));
+        return updateLobby(runTask(new CreateLobbyTask(playerName, lobbySettings, clientAuthenticationKey, version)));
     }
 
     public void clearClientAuthenticationKey() {

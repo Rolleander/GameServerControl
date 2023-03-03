@@ -3,7 +3,6 @@ package com.broll.networklib.server;
 import com.broll.networklib.server.impl.Player;
 import com.broll.networklib.server.impl.ServerLobby;
 
-import com.esotericsoftware.minlog.Log;
 import com.google.common.collect.Lists;
 
 import org.apache.commons.lang3.StringUtils;
@@ -17,7 +16,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class LobbyServerCLI {
@@ -46,7 +44,7 @@ public class LobbyServerCLI {
                     Collection<ServerLobby> lobbies = lobbyGameServer.getLobbyHandler().getLobbies();
                     print("Server has " + lobbies.size() + " lobbies open with " + lobbies.stream().map(ServerLobby::getPlayerCount).reduce(0, Integer::sum) + " total players");
                     lobbies.forEach(lobby -> {
-                        Collection<Player> players = lobby.getPlayers();
+                        Collection<Player> players = lobby.getActivePlayers();
                         String hidden = lobby.isHidden() ? " Hidden" : "";
                         String locked = lobby.isLocked() ? " Locked" : "";
                         String full = lobby.isFull() ? " Full" : "";

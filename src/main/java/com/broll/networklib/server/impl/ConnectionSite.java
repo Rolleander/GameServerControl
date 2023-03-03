@@ -19,12 +19,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Objects;
 
 public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends LobbyServerSite<L, P> {
 
     private final static Logger Log = LoggerFactory.getLogger(ConnectionSite.class);
     private PlayerRegister playerRegister;
     private String serverName;
+
+    private String version;
 
     public ConnectionSite() {
         //required for cloning
@@ -34,6 +37,10 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
         super();
         this.serverName = name;
         this.playerRegister = playerRegister;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     @ConnectionRestriction(RestrictionType.NONE)
@@ -48,7 +55,9 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
     @ConnectionRestriction(RestrictionType.NOT_IN_LOBBY)
     @PackageReceiver
     public void joinLobby(NT_LobbyJoin join) {
-        initPlayerAndJoinLobby(join.lobbyId, join.playerName, join.authenticationKey);
+        if(checkJoiningClientVersion(join.version)){
+            initPlayerAndJoinLobby(join.lobbyId, join.playerName, join.authenticationKey);
+        }
     }
 
     @ConnectionRestriction(RestrictionType.NOT_IN_LOBBY)
@@ -69,6 +78,7 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
             lobby.playerChangedConnectionStatus(player, true);
         } else {
             //is a new player, cant be reconnected
+            Log.warn("Reconnect check failed: player is new and cannot be reconnected!");
             getConnection().sendTCP(new NT_LobbyNoJoin());
         }
     }
@@ -77,7 +87,8 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
     @PackageReceiver
     public void switchLobby(NT_LobbyJoin join) {
         ServerLobby from = getLobby();
-        if (from.isLocked()) {
+        if (from.isLocked() && !getPlayer().isAllowedToLeaveLockedLobby()) {
+            Log.warn("Player "+getPlayer()+" is not allowed to switch lobby!");
             getConnection().sendTCP(new NT_LobbyNoJoin());
             return;
         }
@@ -103,11 +114,15 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
     @ConnectionRestriction(RestrictionType.NOT_IN_LOBBY)
     @PackageReceiver
     public void createLobby(NT_LobbyCreate create) {
+        if(!checkJoiningClientVersion(create.version)){
+            return;
+        }
         boolean reconnected = initPlayerConnection(create.playerName, create.authenticationKey);
         ServerLobby lobby = lobbyHandler.getLobbyCreationRequestHandler().createNewLobby(getPlayer(), create.lobbyName, create.settings);
         if (lobby != null) {
             joinLobby(lobby, reconnected);
         } else {
+            Log.warn("Player "+getPlayer()+" was not allowed to create lobby!");
             //was not allowed to create lobby
             getConnection().sendTCP(new NT_LobbyNoJoin());
         }
@@ -123,7 +138,7 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
             }
             if (player.inLobby()) {
                 ServerLobby lobby = player.getServerLobby();
-                if (lobby.isLocked()) {
+                if (lobby.isLocked() && !player.isAllowedToLeaveLockedLobby()) {
                     //notify lobby player disconnected
                     lobby.playerChangedConnectionStatus(player, false);
                 } else {
@@ -137,6 +152,17 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
                 }
             }
         }
+    }
+
+    private boolean checkJoiningClientVersion(String clientVersion){
+        if (!Objects.equals(this.version, clientVersion)) {
+            Log.warn("Player "+getPlayer()+" version does not match server!");
+            NT_LobbyNoJoin nt = new NT_LobbyNoJoin();
+            nt.reason = "Version mismatch with server: " + version;
+            getConnection().sendTCP(nt);
+            return false;
+        }
+        return true;
     }
 
     private boolean initPlayerAndJoinLobby(int lobbyId, String playerName, String authenticationKey) {

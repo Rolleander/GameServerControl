@@ -5,13 +5,16 @@ import com.broll.networklib.server.GameServer;
 import com.broll.networklib.server.NetworkConnection;
 import com.esotericsoftware.kryonet.Connection;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 
 public class TestServer extends GameServer {
-
+    private final static Logger Log = LoggerFactory.getLogger(TestServer.class);
     private List<ReceivedPackage> received = new ArrayList<>();
     private int timeout;
 
@@ -46,13 +49,13 @@ public class TestServer extends GameServer {
 
     @Override
     protected void received(NetworkConnection connection, Object o) {
+        Log.info("server received "+o.getClass().getSimpleName());
         super.received(connection, o);
         ReceivedPackage pkg = new ReceivedPackage();
         pkg.from = connection;
         pkg.pkg = o;
         received.add(pkg);
     }
-
 
     private class ReceivedPackage {
         public Object pkg;

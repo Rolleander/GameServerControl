@@ -17,10 +17,13 @@ public class JoinLobbyTask extends AbstractClientTask<GameLobby> {
     private String playerName;
     private ClientAuthenticationKey authKey;
 
-    public JoinLobbyTask(GameLobby lobby, String playerName, ClientAuthenticationKey authKey) {
+    private String version;
+
+    public JoinLobbyTask(GameLobby lobby, String playerName, ClientAuthenticationKey authKey, String version) {
         this.lobby = lobby;
         this.playerName = playerName;
         this.authKey = authKey;
+        this.version = version;
     }
 
     @Override
@@ -38,6 +41,7 @@ public class JoinLobbyTask extends AbstractClientTask<GameLobby> {
             join.lobbyId = lobby.getLobbyId();
             join.authenticationKey = authKey.getSecret();
             join.playerName = playerName;
+            join.version = version;
             client.sendTCP(join);
         }
 

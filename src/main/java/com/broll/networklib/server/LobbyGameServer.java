@@ -50,6 +50,9 @@ public class LobbyGameServer<L extends ILobbyData, P extends ILobbyData> impleme
         register(new LobbySite());
     }
 
+    public void setVersion(String version) {
+        this.connectionSite.setVersion(version);
+    }
     public void setSiteReceiver(SiteReceiver<ServerSite, NetworkConnection> receiver) {
         server.setSiteReceiver(receiver);
     }

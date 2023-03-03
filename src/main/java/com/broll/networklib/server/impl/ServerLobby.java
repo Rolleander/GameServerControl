@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
 
@@ -34,7 +33,8 @@ public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
 
     private int playerLimit = NO_PLAYER_LIMIT;
 
-    private List<Player<P>> players = Collections.synchronizedList(new ArrayList<>());
+    private List<Player<P>> activePlayers = Collections.synchronizedList(new ArrayList<>());
+    private List<LobbyPlayer<P>> lobbyPlayers = Collections.synchronizedList(new ArrayList<>());
 
     private boolean locked = false;
 
@@ -86,11 +86,11 @@ public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
     }
 
     public void sendToAllTCP(Object object) {
-        getPlayers().forEach(player -> player.sendTCP(object));
+        getActivePlayers().forEach(player -> player.sendTCP(object));
     }
 
     public void sendToAllUDP(Object object) {
-        getPlayers().forEach(player -> player.sendUDP(object));
+        getActivePlayers().forEach(player -> player.sendUDP(object));
     }
 
     public void setData(L data) {
@@ -110,11 +110,13 @@ public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
             Log.warn("Lobby update [" + id + "] " + name + " | Can not add player " + player.getName() + ", lobby is full or locked!");
             return false;
         }
-        if (players.contains(player)) {
+        if (activePlayers.contains(player)) {
             Log.warn("Lobby update [" + id + "] " + name + " | Player " + player.getName() + " has already joined lobby!");
             return false;
         }
-        players.add(player);
+        player.setAllowedToLeaveLockedLobby(false);
+        activePlayers.add(player);
+        lobbyPlayers.add(new LobbyPlayer<>(player));
         player.setLobby(this);
         assignOwner();
         Log.info("Lobby update [" + id + "] " + name + " | Player " + player.getName() + " joined!");
@@ -129,14 +131,14 @@ public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
 
     private void assignOwner() {
         if (owner == null) {
-            if (!players.isEmpty()) {
+            if (!activePlayers.isEmpty()) {
                 //find next non bot and make him owner
-                getPlayers().stream().filter(it -> it instanceof BotPlayer == false).findFirst().ifPresent(player -> {
+                getActivePlayers().stream().filter(it -> it instanceof BotPlayer == false).findFirst().ifPresent(player -> {
                     this.owner = player;
                 });
             }
         } else {
-            if (!players.contains(owner)) {
+            if (!activePlayers.contains(owner)) {
                 //owner left, pick new random one
                 owner = null;
                 assignOwner();
@@ -149,7 +151,7 @@ public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
     }
 
     public Collection<BotPlayer<P>> getBots() {
-        return getPlayers().stream().filter(player -> player instanceof BotPlayer).map(player -> (BotPlayer<P>) player).collect(Collectors.toList());
+        return getActivePlayers().stream().filter(player -> player instanceof BotPlayer).map(player -> (BotPlayer<P>) player).collect(Collectors.toList());
     }
 
     public Optional<BotPlayer<P>> createBot(String name, P playerSettings) {
@@ -157,7 +159,7 @@ public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
     }
 
     private boolean hasRealPlayers() {
-        return getPlayers().stream().filter(player -> !(player instanceof BotPlayer)).findAny().isPresent();
+        return getActivePlayers().stream().filter(player -> !(player instanceof BotPlayer)).findAny().isPresent();
     }
 
     void checkAutoClose() {
@@ -170,9 +172,10 @@ public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
         closed = true;
         locked = true;
         hidden = true;
-        players.forEach(player -> player.setLobby(null));
-        closeListener.closed(this, players);
-        players.clear();
+        activePlayers.forEach(player -> player.setLobby(null));
+        closeListener.closed(this, activePlayers);
+        activePlayers.clear();
+        lobbyPlayers.clear();
         if (listener != null) {
             listener.lobbyClosed(this);
         }
@@ -182,13 +185,13 @@ public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
         this.hidden = hidden;
     }
 
-    public void lock() {
+    public synchronized void lock() {
         if (!this.locked) {
             updateLock(true);
         }
     }
 
-    public void unlock() {
+    public synchronized void unlock() {
         if (this.locked) {
             updateLock(false);
         }
@@ -209,7 +212,7 @@ public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
         if (playerLimit == NO_PLAYER_LIMIT) {
             return false;
         }
-        return players.size() >= playerLimit;
+        return activePlayers.size() >= playerLimit;
     }
 
     void playerChangedConnectionStatus(Player<P> player, boolean connected) {
@@ -225,19 +228,20 @@ public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
     }
 
     synchronized void removePlayer(Player<P> player) {
-        if (!players.contains(player)) {
+        if (!activePlayers.contains(player)) {
             Log.warn("Lobby update [" + id + "] " + name + " | Player " + player.getName() + " cannot remove player from lobby that is not part of its players!");
-            return;
-        }
-        if (locked) {
-            Log.warn("Lobby update [" + id + "] " + name + " | Can not remove player " + player.getName() + ", lobby is locked!");
             return;
         }
         //only set lobby to null if player is from this lobby, to prevent unsetting lobby when transfering player
         if (player.getServerLobby() == this) {
             player.removedFromLobby();
         }
-        players.remove(player);
+        activePlayers.remove(player);
+        if(locked){
+            player.getLobbyPlayer().leftLobby();
+        }else{
+            lobbyPlayers.remove(player.getLobbyPlayer());
+        }
         assignOwner();
         Log.info("Lobby update [" + id + "] " + name + " | Player " + player.getName() + " left.");
         if (player.getListener() != null) {
@@ -267,7 +271,7 @@ public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
         joined.playerId = joinedPlayer.getId();
         fillLobbyUpdate(update);
         fillLobbyUpdate(joined);
-        getPlayers().forEach(p -> {
+        getActivePlayers().forEach(p -> {
             if (p == joinedPlayer) {
                 p.sendTCP(joined);
             } else {
@@ -278,7 +282,7 @@ public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
 
     void fillLobbyUpdate(NT_LobbyUpdate update) {
         fillLobbyInfo(update);
-        update.players = getPlayers().stream().map(Player::nt).toArray(NT_LobbyPlayerInfo[]::new);
+        update.players = getActivePlayers().stream().map(Player::nt).toArray(NT_LobbyPlayerInfo[]::new);
         if (owner != null) {
             update.owner = owner.getId();
         }
@@ -299,23 +303,27 @@ public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
     }
 
     public int getPlayerCount() {
-        return players.size();
+        return activePlayers.size();
     }
 
     public int getPlayerLimit() {
         return playerLimit;
     }
 
-    public Collection<Player<P>> getPlayers() {
-        return Collections.unmodifiableCollection(players);
+    public Collection<Player<P>> getActivePlayers() {
+        return Collections.unmodifiableCollection(activePlayers);
+    }
+
+    public Collection<LobbyPlayer<P>> getPlayers() {
+        return Collections.unmodifiableCollection(lobbyPlayers);
     }
 
     public List<P> getPlayersData() {
-        return getPlayers().stream().map(Player::getData).collect(Collectors.toList());
+        return getPlayers().stream().map(LobbyPlayer::getData).collect(Collectors.toList());
     }
 
     public Player<P> getPlayer(int id) {
-        return players.stream().filter(player -> player.getId() == id).findFirst().orElse(null);
+        return activePlayers.stream().filter(player -> player.getId() == id).findFirst().orElse(null);
     }
 
     public int getId() {

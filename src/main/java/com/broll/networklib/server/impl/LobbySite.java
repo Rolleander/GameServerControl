@@ -14,7 +14,7 @@ public class LobbySite<L extends ILobbyData, P extends ILobbyData> extends Lobby
     public void receive(NT_ChatMessage chatMessage) {
         //forward message to all other players in the lobby
         chatMessage.from = getPlayer().getName();
-        getLobby().getPlayers().stream().filter(p -> p != getPlayer()).forEach(p -> p.sendTCP(chatMessage));
+        getLobby().getActivePlayers().stream().filter(p -> p != getPlayer()).forEach(p -> p.sendTCP(chatMessage));
     }
 
     @PackageReceiver

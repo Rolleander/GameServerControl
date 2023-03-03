@@ -4,4 +4,6 @@ public class NT_LobbyJoin {
     public String playerName;
     public int lobbyId;
     public String authenticationKey;
+
+    public String version;
 }

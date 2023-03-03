@@ -14,10 +14,14 @@ public class Player<P extends ILobbyData> {
     private boolean online = true;
     private NetworkConnection connection;
     private ServerLobby serverLobby;
+
+    private LobbyPlayer lobbyPlayer;
     private String authenticationKey;
     private IPlayerListener listener;
     private P data;
     private Map<String, Object> sharedData = new HashMap<>();
+
+    private boolean allowedToLeaveLockedLobby = false;
 
     public Player(int id, String authenticationKey, NetworkConnection connection) {
         this.id = id;
@@ -42,10 +46,12 @@ public class Player<P extends ILobbyData> {
     }
 
     public void sendTCP(Object object) {
+        if(!online) return;
         connection.sendTCP(object);
     }
 
     public void sendUDP(Object object) {
+        if(!online) return;
         connection.sendUDP(object);
     }
 
@@ -77,6 +83,14 @@ public class Player<P extends ILobbyData> {
         this.online = online;
     }
 
+    public void setAllowedToLeaveLockedLobby(boolean allowedToLeaveLockedLobby) {
+        this.allowedToLeaveLockedLobby = allowedToLeaveLockedLobby;
+    }
+
+    public boolean isAllowedToLeaveLockedLobby() {
+        return allowedToLeaveLockedLobby;
+    }
+
     public void setName(String name) {
         this.name = name;
     }
@@ -106,6 +120,14 @@ public class Player<P extends ILobbyData> {
             return null;
         }
         return data.nt();
+    }
+
+    void setLobbyPlayer(LobbyPlayer lobbyPlayer) {
+        this.lobbyPlayer = lobbyPlayer;
+    }
+
+    LobbyPlayer getLobbyPlayer() {
+        return lobbyPlayer;
     }
 
     @Override

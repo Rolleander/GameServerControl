@@ -21,8 +21,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -65,7 +63,7 @@ public abstract class NetworkTest<L extends ILobbyData, P extends ILobbyData> {
     public abstract void registerClientSites(LobbyGameClient client);
 
     public LobbyGameClient testClient(String name) {
-        TestClient testClient = new TestClient(registerNetwork(), TIMEOUT);
+        TestClient testClient = new TestClient(name, registerNetwork(), TIMEOUT);
         LobbyGameClient client = new LobbyGameClient(testClient);
         registerClientSites(client);
         TestClientData data = new TestClientData();
@@ -144,6 +142,11 @@ public abstract class NetworkTest<L extends ILobbyData, P extends ILobbyData> {
         else{
             throw new RuntimeException("Lobby not found");
         }
+    }
+
+    public GameLobby createLobby(LobbyGameClient client, Object lobbySettings){
+        String name = clients.get(client).playerName;
+        return waitFor(client.createLobby(name, lobbySettings));
     }
 
     private void connectToLobby(LobbyGameClient client, GameLobby lobby) {

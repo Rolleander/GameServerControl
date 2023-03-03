@@ -77,7 +77,7 @@ public class LobbyHandler<L extends ILobbyData, P extends ILobbyData> {
 
     public List<Player> transferPlayers(ServerLobby<L, P> from, ServerLobby<L, P> to) {
         List<Player> missedPlayers = new ArrayList<>();
-        from.getPlayers().forEach(player -> {
+        from.getActivePlayers().forEach(player -> {
             if (!transferPlayer(player, to)) {
                 missedPlayers.add(player);
             }
@@ -88,7 +88,7 @@ public class LobbyHandler<L extends ILobbyData, P extends ILobbyData> {
     public boolean transferPlayer(Player player, ServerLobby<L, P> toLobby) {
         ServerLobby fromLobby = player.getServerLobby();
         if (fromLobby != null) {
-            if (fromLobby.isLocked() || toLobby.isLocked()) {
+            if ((fromLobby.isLocked() && !player.isAllowedToLeaveLockedLobby()) || toLobby.isLocked()) {
                 return false;
             }
             if (toLobby.addPlayer(player)) {
