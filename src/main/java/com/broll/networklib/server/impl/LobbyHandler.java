@@ -1,6 +1,7 @@
 package com.broll.networklib.server.impl;
 
 import com.broll.networklib.network.nt.NT_LobbyKicked;
+import com.broll.networklib.server.ILobbyServerListener;
 import com.broll.networklib.server.LobbyServerSitesHandler;
 
 import org.slf4j.Logger;
@@ -21,15 +22,18 @@ public class LobbyHandler<L extends ILobbyData, P extends ILobbyData> {
     private final static Logger Log = LoggerFactory.getLogger(LobbyHandler.class);
     private AtomicInteger idCounter = new AtomicInteger();
     private Map<Integer, ServerLobby<L, P>> lobbies = new ConcurrentHashMap<>();
-    private ILobbyCloseListener listener;
+    private ILobbyCloseListener lobbyCloseListener;
     private ILobbyCreationRequest<L, P> lobbyCreationRequestHandler = (player, lobbyName, settings) -> this.openLobby(lobbyName);
     private PlayerRegister playerRegister;
     private LobbyServerSitesHandler sitesHandler;
 
-    public LobbyHandler(ILobbyCloseListener listener, PlayerRegister playerRegister, LobbyServerSitesHandler sitesHandler) {
-        this.listener = listener;
+    private ILobbyServerListener<L, P> serverListener;
+
+    public LobbyHandler(ILobbyCloseListener lobbyCloseListener, PlayerRegister playerRegister, LobbyServerSitesHandler sitesHandler, ILobbyServerListener<L, P> serverListener) {
+        this.lobbyCloseListener = lobbyCloseListener;
         this.playerRegister = playerRegister;
         this.sitesHandler = sitesHandler;
+        this.serverListener = serverListener;
     }
 
     public void setLobbyCreationRequestHandler(ILobbyCreationRequest<L, P> lobbyCreationRequestHandler) {
@@ -42,9 +46,11 @@ public class LobbyHandler<L extends ILobbyData, P extends ILobbyData> {
 
     public ServerLobby<L, P> openLobby(String name) {
         int id = idCounter.getAndIncrement();
-        ServerLobby lobby = new ServerLobby(this, name, id, listener);
+        ServerLobby lobby = new ServerLobby(this, name, id, lobbyCloseListener);
+        lobby.addListener(serverListener);
         lobbies.put(id, lobby);
         Log.info("Server opened lobby [" + id + "]: " + name);
+        serverListener.lobbyOpened(lobby);
         return lobby;
     }
 
@@ -70,7 +76,7 @@ public class LobbyHandler<L extends ILobbyData, P extends ILobbyData> {
 
     public void kickPlayer(ServerLobby<L, P> lobby, Player<P> player) {
         lobby.removePlayer(player);
-        listener.kickedPlayer(player);
+        lobbyCloseListener.kickedPlayer(player);
         lobby.sendLobbyUpdate();
         lobby.checkAutoClose();
     }
@@ -96,9 +102,7 @@ public class LobbyHandler<L extends ILobbyData, P extends ILobbyData> {
                     fromLobby.removePlayer(player);
                     fromLobby.sendLobbyUpdate();
                     fromLobby.checkAutoClose();
-                }
-                if (player.getListener() != null) {
-                    player.getListener().switchedLobby(player, fromLobby, toLobby);
+                    player.getListeners().forEach(it -> ((IPlayerListener)it).switchedLobby(player, fromLobby, toLobby));
                 }
                 return true;
             }
@@ -128,5 +132,6 @@ public class LobbyHandler<L extends ILobbyData, P extends ILobbyData> {
     public Collection<ServerLobby<L, P>> getLobbies() {
         return Collections.unmodifiableCollection(lobbies.values());
     }
+
 
 }

@@ -25,6 +25,8 @@ public class LobbyGameServer<L extends ILobbyData, P extends ILobbyData> impleme
     private ConnectionSite<L, P> connectionSite;
     private Map<String, Object> sharedData = new HashMap<>();
 
+    private LobbyServerListenerProxy<L,P> listeners = new LobbyServerListenerProxy<>();
+
     public LobbyGameServer(String name, IRegisterNetwork registerNetwork) {
         this(new GameServer(registerNetwork), name);
     }
@@ -44,10 +46,18 @@ public class LobbyGameServer<L extends ILobbyData, P extends ILobbyData> impleme
             public void kickedPlayer(Player<P> player) {
                 connectionSite.kickedPlayer(player);
             }
-        }, playerRegister, sitesHandler);
+        }, playerRegister, sitesHandler, listeners);
         server.setSitesHandler(sitesHandler);
         register(connectionSite);
         register(new LobbySite());
+    }
+
+    public void addListener(ILobbyServerListener<L, P> listener) {
+        this.listeners.addListener(listener);
+    }
+
+    public void removeListener(ILobbyServerListener<L, P> listener) {
+        this.listeners.removeListener(listener);
     }
 
     public void setVersion(String version) {

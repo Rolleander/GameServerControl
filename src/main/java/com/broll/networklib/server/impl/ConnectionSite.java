@@ -133,9 +133,7 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
         Player player = connection.getPlayer();
         if (player != null) {
             player.updateOnlineStatus(false);
-            if (player.getListener() != null) {
-                player.getListener().disconnected(player);
-            }
+            player.getListeners().forEach(it->((IPlayerListener)it).disconnected(player));
             if (player.inLobby()) {
                 ServerLobby lobby = player.getServerLobby();
                 if (lobby.isLocked() && !player.isAllowedToLeaveLockedLobby()) {
@@ -193,9 +191,7 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
         getConnection().setPlayer(player);
         if (!player.isOnline()) {
             player.updateOnlineStatus(true);
-            if (player.getListener() != null) {
-                player.getListener().reconnected(player);
-            }
+            player.getListeners().forEach(it -> ((IPlayerListener)it).reconnected(player));
         }
     }
 

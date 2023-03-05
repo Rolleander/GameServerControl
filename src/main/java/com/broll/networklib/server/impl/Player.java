@@ -3,7 +3,9 @@ package com.broll.networklib.server.impl;
 import com.broll.networklib.network.nt.NT_LobbyPlayerInfo;
 import com.broll.networklib.server.NetworkConnection;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -17,7 +19,8 @@ public class Player<P extends ILobbyData> {
 
     private LobbyPlayer lobbyPlayer;
     private String authenticationKey;
-    private IPlayerListener listener;
+
+    private List<IPlayerListener> listeners = new ArrayList<>();
     private P data;
     private Map<String, Object> sharedData = new HashMap<>();
 
@@ -55,12 +58,17 @@ public class Player<P extends ILobbyData> {
         connection.sendUDP(object);
     }
 
-    public void setListener(IPlayerListener listener) {
-        this.listener = listener;
+    public void addListener(IPlayerListener listener) {
+        this.listeners.add(listener);
     }
 
-    IPlayerListener getListener() {
-        return listener;
+    public void removeListener(IPlayerListener listener) {
+        this.listeners.remove(listener);
+    }
+
+
+    List<IPlayerListener> getListeners() {
+        return listeners;
     }
 
     void setLobby(ServerLobby lobby) {

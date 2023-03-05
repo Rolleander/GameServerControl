@@ -20,7 +20,7 @@ public abstract class LobbyServerSite<L extends ILobbyData, P extends ILobbyData
 
     private final static Logger Log = LoggerFactory.getLogger(LobbyServerSite.class);
     protected LobbyHandler<L, P> lobbyHandler;
-    private LobbyGameServer<L, P> lobbyGameServer;
+    protected LobbyGameServer<L, P> lobbyGameServer;
     private List<SharedField> sharedFields = new ArrayList<>();
 
     public void init(LobbyGameServer<L, P> lobbyServer, LobbyHandler<L, P> lobbyHandler) {

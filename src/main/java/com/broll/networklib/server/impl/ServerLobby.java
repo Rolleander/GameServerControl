@@ -44,7 +44,7 @@ public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
 
     private boolean autoClose = true;
 
-    private IServerLobbyListener listener;
+    private List<IServerLobbyListener> listeners = new ArrayList<>();
 
     private ILobbyCloseListener<L, P> closeListener;
 
@@ -101,8 +101,13 @@ public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
         return data;
     }
 
-    public void setListener(IServerLobbyListener listener) {
-        this.listener = listener;
+
+    public void addListener(IServerLobbyListener listener) {
+        this.listeners.add(listener);
+    }
+
+    public void removeListener(IServerLobbyListener listener) {
+        this.listeners.remove(listener);
     }
 
     synchronized boolean addPlayer(Player<P> player) {
@@ -120,12 +125,8 @@ public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
         player.setLobby(this);
         assignOwner();
         Log.info("Lobby update [" + id + "] " + name + " | Player " + player.getName() + " joined!");
-        if (player.getListener() != null) {
-            player.getListener().joinedLobby(player, this);
-        }
-        if (listener != null) {
-            listener.playerJoined(this, player);
-        }
+        player.getListeners().forEach(it -> it.joinedLobby(player, this));
+        listeners.forEach(it -> it.playerJoined(this, player));
         return true;
     }
 
@@ -176,9 +177,7 @@ public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
         closeListener.closed(this, activePlayers);
         activePlayers.clear();
         lobbyPlayers.clear();
-        if (listener != null) {
-            listener.lobbyClosed(this);
-        }
+        listeners.forEach(it -> it.lobbyClosed(this));
     }
 
     public void setHidden(boolean hidden) {
@@ -216,14 +215,12 @@ public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
     }
 
     void playerChangedConnectionStatus(Player<P> player, boolean connected) {
-        if (listener != null) {
-            if (connected) {
-                Log.info("Player " + player + " reconnected to lobby " + this);
-                listener.playerReconnected(this, player);
-            } else {
-                Log.info("Player " + player + " disconnected from lobby " + this);
-                listener.playerDisconnected(this, player);
-            }
+        if (connected) {
+            Log.info("Player " + player + " reconnected to lobby " + this);
+            listeners.forEach(it -> it.playerReconnected(this, player));
+        } else {
+            Log.info("Player " + player + " disconnected from lobby " + this);
+            listeners.forEach(it -> it.playerDisconnected(this, player));
         }
     }
 
@@ -237,19 +234,15 @@ public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
             player.removedFromLobby();
         }
         activePlayers.remove(player);
-        if(locked){
+        if (locked) {
             player.getLobbyPlayer().leftLobby();
-        }else{
+        } else {
             lobbyPlayers.remove(player.getLobbyPlayer());
         }
         assignOwner();
         Log.info("Lobby update [" + id + "] " + name + " | Player " + player.getName() + " left.");
-        if (player.getListener() != null) {
-            player.getListener().leftLobby(player, this);
-        }
-        if (listener != null) {
-            listener.playerLeft(this, player);
-        }
+        player.getListeners().forEach(it -> it.leftLobby(player, this));
+        listeners.forEach(it -> it.playerLeft(this, player));
     }
 
     public void chat(String from, String message) {

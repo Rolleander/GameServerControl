@@ -17,6 +17,6 @@ public class LobbyServerApplication {
         lobbyData.setStartMoney(1500);
         testLobby.setData(lobbyData);
         testLobby.setPlayerLimit(NT_TokenType.values().length);
-        testLobby.setListener(new MonopolyLobbyListener());
+        testLobby.addListener(new MonopolyLobbyListener());
     }
 }
