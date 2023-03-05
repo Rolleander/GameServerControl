@@ -155,6 +155,10 @@ public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
         return getActivePlayers().stream().filter(player -> player instanceof BotPlayer).map(player -> (BotPlayer<P>) player).collect(Collectors.toList());
     }
 
+    public Collection<Player<P>> getRealPlayers() {
+        return getActivePlayers().stream().filter(player -> !(player instanceof BotPlayer)).collect(Collectors.toList());
+    }
+
     public Optional<BotPlayer<P>> createBot(String name, P playerSettings) {
         return lobbyHandler.createBot(this, name, playerSettings);
     }

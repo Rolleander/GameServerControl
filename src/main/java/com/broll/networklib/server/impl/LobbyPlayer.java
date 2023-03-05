@@ -78,4 +78,13 @@ public class LobbyPlayer<P extends ILobbyData> {
     public boolean isBot() {
         return bot;
     }
+
+    @Override
+    public String toString() {
+        String botInfo = "";
+        if(isBot()){
+            botInfo="/BOT";
+        }
+        return name+" ["+id+botInfo+"]";
+    }
 }
