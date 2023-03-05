@@ -3,6 +3,7 @@ package com.broll.networklib.server.impl;
 import com.broll.networklib.PackageReceiver;
 import com.broll.networklib.network.nt.NT_ChatMessage;
 import com.broll.networklib.network.nt.NT_LobbyKick;
+import com.broll.networklib.network.nt.NT_LobbyLeave;
 import com.broll.networklib.server.ConnectionRestriction;
 import com.broll.networklib.server.LobbyServerSite;
 import com.broll.networklib.server.RestrictionType;
@@ -27,5 +28,12 @@ public class LobbySite<L extends ILobbyData, P extends ILobbyData> extends Lobby
                 lobby.kickPlayer(playerToKick);
             }
         }
+    }
+
+    @PackageReceiver
+    @ConnectionRestriction(RestrictionType.LOBBY_UNLOCKED)
+    public void leave(NT_LobbyLeave nt) {
+        ServerLobby<L, P> lobby = getLobby();
+        lobby.getLobbyHandler().removePlayer(lobby, getPlayer());
     }
 }

@@ -3,6 +3,7 @@ package com.broll.networklib.client.impl;
 import com.broll.networklib.client.GameClient;
 import com.broll.networklib.network.NetworkException;
 import com.broll.networklib.network.nt.NT_ChatMessage;
+import com.broll.networklib.network.nt.NT_LobbyLeave;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -68,6 +69,11 @@ public class GameLobby {
     public void sendUDP(Object object) {
         assureConnected();
         client.sendUDP(object);
+    }
+
+    public void leave() {
+        assureConnected();
+        sendTCP(new NT_LobbyLeave());
     }
 
     public Optional<LobbyPlayer> getPlayer(String name) {

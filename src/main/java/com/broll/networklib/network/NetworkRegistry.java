@@ -9,6 +9,7 @@ import com.broll.networklib.network.nt.NT_LobbyJoin;
 import com.broll.networklib.network.nt.NT_LobbyJoined;
 import com.broll.networklib.network.nt.NT_LobbyKick;
 import com.broll.networklib.network.nt.NT_LobbyKicked;
+import com.broll.networklib.network.nt.NT_LobbyLeave;
 import com.broll.networklib.network.nt.NT_LobbyLock;
 import com.broll.networklib.network.nt.NT_LobbyNoJoin;
 import com.broll.networklib.network.nt.NT_LobbyPlayerInfo;
@@ -56,6 +57,7 @@ public final class NetworkRegistry {
         network.registerNetworkType(NT_LobbyPlayerInfo.class);
         network.registerNetworkType(NT_LobbyReconnected.class);
         network.registerNetworkType(NT_LobbyUpdate.class);
+        network.registerNetworkType(NT_LobbyLeave.class);
         network.registerNetworkType(NT_ReconnectCheck.class);
         network.registerNetworkType(NT_ServerInformation.class);
         network.registerNetworkType(NT_LobbyInformation[].class);

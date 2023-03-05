@@ -15,6 +15,13 @@ public class LobbyPlayer {
         this.lobby = lobby;
     }
 
+    public void leaveLobby(){
+        if(lobby==null){
+            throw new RuntimeException("No lobby to leave");
+        }
+        lobby.leave();
+    }
+
     public GameLobby getLobby() {
         return lobby;
     }

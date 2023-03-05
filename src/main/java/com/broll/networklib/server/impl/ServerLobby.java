@@ -323,6 +323,10 @@ public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
         return activePlayers.stream().filter(player -> player.getId() == id).findFirst().orElse(null);
     }
 
+    public LobbyHandler<L, P> getLobbyHandler() {
+        return lobbyHandler;
+    }
+
     public int getId() {
         return id;
     }

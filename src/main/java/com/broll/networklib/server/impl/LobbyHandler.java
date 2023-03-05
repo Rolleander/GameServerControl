@@ -86,6 +86,12 @@ public class LobbyHandler<L extends ILobbyData, P extends ILobbyData> {
         lobby.checkAutoClose();
     }
 
+    public void removePlayer(ServerLobby<L, P> lobby, Player<P> player) {
+        lobby.removePlayer(player);
+        lobby.sendLobbyUpdate();
+        lobby.checkAutoClose();
+    }
+
     public List<Player> transferPlayers(ServerLobby<L, P> from, ServerLobby<L, P> to) {
         List<Player> missedPlayers = new ArrayList<>();
         from.getActivePlayers().forEach(player -> {
