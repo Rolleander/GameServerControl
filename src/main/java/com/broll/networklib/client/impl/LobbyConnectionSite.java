@@ -89,6 +89,7 @@ public class LobbyConnectionSite extends LobbyClientSite {
     }
 
     private synchronized void resetLobby() {
+        LastConnection.clear();
         clearLobby.run();
         lobby = null;
     }

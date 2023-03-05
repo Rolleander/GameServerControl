@@ -1,5 +1,6 @@
 package com.broll.networklib.server.impl;
 
+import com.broll.networklib.network.nt.NT_LobbyClosed;
 import com.broll.networklib.network.nt.NT_LobbyKicked;
 import com.broll.networklib.server.ILobbyServerListener;
 import com.broll.networklib.server.LobbyServerSitesHandler;
@@ -73,9 +74,8 @@ public class LobbyHandler<L extends ILobbyData, P extends ILobbyData> {
         lobby.remove();
         lobbies.remove(lobby.getId());
         //send lobby close for remaining players
-        NT_LobbyKicked lobbyKicked = new NT_LobbyKicked();
-        lobbyKicked.reason = NT_LobbyKicked.REASON_LOBBY_CLOSED;
-        lobby.sendToAllTCP(lobbyKicked);
+        NT_LobbyClosed nt = new NT_LobbyClosed();
+        lobby.sendToAllTCP(nt);
         Log.info("Server closed lobby [" + lobby.getId() + "]: " + lobby.getName());
     }
 
