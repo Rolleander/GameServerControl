@@ -45,8 +45,13 @@ public class LobbyHandler<L extends ILobbyData, P extends ILobbyData> {
     }
 
     public ServerLobby<L, P> openLobby(String name) {
+       return openLobby(name, null);
+    }
+
+    public ServerLobby<L, P> openLobby(String name, L lobbyData) {
         int id = idCounter.getAndIncrement();
         ServerLobby lobby = new ServerLobby(this, name, id, lobbyCloseListener);
+        lobby.setData(lobbyData);
         lobby.addListener(serverListener);
         lobbies.put(id, lobby);
         Log.info("Server opened lobby [" + id + "]: " + name);
