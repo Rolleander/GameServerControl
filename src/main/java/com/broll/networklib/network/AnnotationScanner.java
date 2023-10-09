@@ -1,9 +1,7 @@
 package com.broll.networklib.network;
 
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -11,9 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import dorkbox.annotation.AnnotationDefaults;
-import dorkbox.annotation.AnnotationDetector;
 
 public final class AnnotationScanner {
 
@@ -33,21 +28,31 @@ public final class AnnotationScanner {
     }
 
     public static List<Method> findAnnotatedMethods(Object object, Class<? extends Annotation> annotation) {
-        return Arrays.stream(object.getClass().getMethods())
-                .filter(m -> m.getAnnotation(annotation) != null)
-                .collect(Collectors.toList());
+        List<Method> resolvedMethods = new ArrayList<>();
+        Class<?> clazz = object.getClass();
+        while(!clazz.getName().equals("java.lang.Object")){
+            List<Method> annotatedMethods = Arrays.stream(clazz.getDeclaredMethods())
+                    .filter(m -> m.getAnnotation(annotation) != null)
+                    .collect(Collectors.toList());
+            annotatedMethods.forEach(it-> addUniqueMethods(resolvedMethods,it));
+            clazz= clazz.getSuperclass();
+        }
+        return resolvedMethods;
     }
 
-    public static List<?> initAnnotatedClasses(Class<? extends Annotation> annotation) throws IOException {
-        List<Class<?>> clazzes = AnnotationDetector.scanClassPath().forAnnotations(annotation).collect(AnnotationDefaults.getType);
-        return clazzes.stream().map(clazz -> {
-            try {
-                return clazz.newInstance();
-            } catch (InstantiationException e) {
-                throw new RuntimeException(e);
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
-        }).collect(Collectors.toList());
+    private static void addUniqueMethods(List<Method> methods, Method method){
+        if(methods.stream().noneMatch(it->isSameSignature(it, method))) {
+            methods.add(method);
+        }
+    }
+
+    private static boolean isSameSignature(Method methodA, Method methodB) {
+        if (methodA == null)
+            return false;
+        if (methodB == null)
+            return false;
+        List<Class<?>> parameterTypesA = Arrays.asList(methodA.getParameterTypes());
+        List<Class<?>> parameterTypesB = Arrays.asList(methodB.getParameterTypes());
+        return methodA.getName().equals(methodB.getName()) && parameterTypesA.containsAll(parameterTypesB);
     }
 }

@@ -31,7 +31,15 @@ public class LobbyGameServer<L extends ILobbyData, P extends ILobbyData> impleme
         this(new GameServer(registerNetwork), name);
     }
 
+    public LobbyGameServer(String name, LobbySite<L,P> lobbySite, IRegisterNetwork registerNetwork) {
+        this(new GameServer(registerNetwork), name, lobbySite);
+    }
+
     public LobbyGameServer(GameServer server, String name) {
+        this(server,name,new LobbySite<>());
+    }
+
+    public LobbyGameServer(GameServer server, String name, LobbySite<L,P> lobbySite) {
         this.server = server;
         PlayerRegister playerRegister = new PlayerRegister();
         connectionSite = new ConnectionSite(name, playerRegister);
@@ -49,7 +57,7 @@ public class LobbyGameServer<L extends ILobbyData, P extends ILobbyData> impleme
         }, playerRegister, sitesHandler, listeners);
         server.setSitesHandler(sitesHandler);
         register(connectionSite);
-        register(new LobbySite());
+        register(lobbySite);
     }
 
     public void addListener(ILobbyServerListener<L, P> listener) {

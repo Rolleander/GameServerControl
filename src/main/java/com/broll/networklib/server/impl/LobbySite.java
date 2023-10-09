@@ -12,15 +12,22 @@ public class LobbySite<L extends ILobbyData, P extends ILobbyData> extends Lobby
 
     @PackageReceiver
     @ConnectionRestriction(RestrictionType.IN_LOBBY)
-    public void receive(NT_ChatMessage chatMessage) {
-        //forward message to all other players in the lobby
+    private void receive(NT_ChatMessage chatMessage) {
+        chat(chatMessage);
+    }
+
+    protected void chat(NT_ChatMessage chatMessage){
         chatMessage.from = getPlayer().getName();
         getLobby().getActivePlayers().stream().filter(p -> p != getPlayer()).forEach(p -> p.sendTCP(chatMessage));
     }
 
     @PackageReceiver
     @ConnectionRestriction(RestrictionType.LOBBY_UNLOCKED)
-    public void receive(NT_LobbyKick kick) {
+    private void receive(NT_LobbyKick kick) {
+      kick(kick);
+    }
+
+    protected void kick(NT_LobbyKick kick){
         ServerLobby<L, P> lobby = getLobby();
         if (lobby.getOwner() == getPlayer() ) {
             Player<P> playerToKick = lobby.getPlayer(kick.player);
@@ -32,7 +39,11 @@ public class LobbySite<L extends ILobbyData, P extends ILobbyData> extends Lobby
 
     @PackageReceiver
     @ConnectionRestriction(RestrictionType.LOBBY_UNLOCKED)
-    public void leave(NT_LobbyLeave nt) {
+    private void receive(NT_LobbyLeave nt) {
+       leave(nt);
+    }
+
+    protected void leave(NT_LobbyLeave leave){
         ServerLobby<L, P> lobby = getLobby();
         lobby.getLobbyHandler().removePlayer(lobby, getPlayer());
     }

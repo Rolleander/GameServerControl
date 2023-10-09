@@ -57,11 +57,15 @@ public abstract class AbstractSitesHandler<T extends NetworkSite, C> {
 
     public void clear() {
         siteModificationLock.writeLock().lock();
-        new ArrayList(sites.values()).stream().filter(site -> !INTERNAL_SITES.contains(site.getClass())).forEach(site -> {
+        new ArrayList(sites.values()).stream().filter(this::isRemovableSite).forEach(site -> {
             sites.remove(site.getClass());
             removeSite((T) site);
         });
         siteModificationLock.writeLock().unlock();
+    }
+
+    private boolean isRemovableSite(Object site){
+        return INTERNAL_SITES.stream().noneMatch(it-> it.isInstance(site));
     }
 
     public final void add(T site) {
