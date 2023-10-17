@@ -9,7 +9,7 @@ public class NetworkConnection extends Connection {
 
     private Player player;
 
-    private boolean active = true;
+    private boolean active = false;
 
     public void setPlayer(Player player) {
         this.player = player;

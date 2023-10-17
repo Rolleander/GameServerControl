@@ -104,8 +104,10 @@ public class GameServer extends GameEndpoint<ServerSite, NetworkConnection> {
         public void disconnected(Connection c) {
             Log.info(c + " disconnected from server");
             NetworkConnection connection = (NetworkConnection) c;
-            connection.setActive(false);
-            passAllSites(connection, sites -> sites.forEach(site -> site.onDisconnect(connection)));
+            if(connection.isActive()){
+                connection.setActive(false);
+                passAllSites(connection, sites -> sites.forEach(site -> site.onDisconnect(connection)));
+            }
             discardConnection(connection);
         }
 
