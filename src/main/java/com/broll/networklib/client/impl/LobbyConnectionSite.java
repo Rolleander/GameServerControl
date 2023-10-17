@@ -58,6 +58,7 @@ public class LobbyConnectionSite extends LobbyClientSite {
         if (lobby != null && lobby.getLobbyUpdateListener() != null) {
             lobby.getLobbyUpdateListener().kickedFromLobby(lobby);
         }
+        LastConnection.clear();
         resetLobby();
     }
 
@@ -67,6 +68,7 @@ public class LobbyConnectionSite extends LobbyClientSite {
         if (lobby != null && lobby.getLobbyUpdateListener() != null) {
             lobby.getLobbyUpdateListener().closed(lobby);
         }
+        LastConnection.clear();
         resetLobby();
     }
 
@@ -89,7 +91,6 @@ public class LobbyConnectionSite extends LobbyClientSite {
     }
 
     private synchronized void resetLobby() {
-        LastConnection.clear();
         clearLobby.run();
         lobby = null;
     }
