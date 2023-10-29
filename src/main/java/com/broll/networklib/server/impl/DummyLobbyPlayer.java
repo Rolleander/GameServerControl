@@ -4,4 +4,9 @@ public class DummyLobbyPlayer<P extends ILobbyData> extends LobbyPlayer<P>{
     public DummyLobbyPlayer() {
         super(new DummyPlayer<>());
     }
+
+    @Override
+    public boolean isOnline() {
+        return false;
+    }
 }
