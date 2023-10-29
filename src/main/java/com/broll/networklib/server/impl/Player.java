@@ -26,7 +26,7 @@ public class Player<P extends ILobbyData> {
 
     private boolean allowedToLeaveLockedLobby = false;
 
-    public Player(int id, String authenticationKey, NetworkConnection connection) {
+    Player(int id, String authenticationKey, NetworkConnection connection) {
         this.id = id;
         this.authenticationKey = authenticationKey;
         this.connection = connection;
