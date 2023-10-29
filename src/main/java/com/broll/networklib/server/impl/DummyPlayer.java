@@ -16,4 +16,9 @@ public class DummyPlayer<P extends ILobbyData> extends Player<P>{
     public void sendUDP(Object object) {
 
     }
+
+    @Override
+    public boolean isOnline() {
+        return false;
+    }
 }
