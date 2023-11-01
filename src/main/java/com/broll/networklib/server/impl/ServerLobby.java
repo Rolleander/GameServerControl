@@ -134,7 +134,7 @@ public class ServerLobby<L extends ILobbyData, P extends ILobbyData> {
         if (owner == null) {
             if (!activePlayers.isEmpty()) {
                 //find next non bot and make him owner
-                getActivePlayers().stream().filter(it -> it instanceof BotPlayer == false).findFirst().ifPresent(player -> {
+                getActivePlayers().stream().filter(it -> !(it instanceof BotPlayer)).findFirst().ifPresent(player -> {
                     this.owner = player;
                 });
             }
