@@ -10,4 +10,5 @@ public class DummyServerLobby<L extends ILobbyData, P extends ILobbyData> extend
         addPlayer(player);
     }
 
+    public void removeDummyPlayer(DummyPlayer<P> player){removePlayer(player);}
 }
