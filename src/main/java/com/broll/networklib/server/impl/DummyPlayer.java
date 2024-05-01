@@ -3,8 +3,8 @@ package com.broll.networklib.server.impl;
 import com.broll.networklib.server.NetworkConnection;
 
 public class DummyPlayer<P extends ILobbyData> extends Player<P>{
-    public DummyPlayer() {
-        super(-1, null, null);
+    public DummyPlayer(int id) {
+        super(id, null, null);
     }
 
     @Override
