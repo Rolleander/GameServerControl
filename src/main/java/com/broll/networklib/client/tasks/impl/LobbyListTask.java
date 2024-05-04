@@ -8,6 +8,7 @@ import com.broll.networklib.client.impl.LobbyLookupSite;
 import com.broll.networklib.client.tasks.AbstractClientTask;
 import com.broll.networklib.client.tasks.AbstractTaskSite;
 import com.broll.networklib.client.tasks.DiscoveredLobbies;
+import com.broll.networklib.client.tasks.LobbyListResult;
 import com.broll.networklib.network.nt.NT_ServerInformation;
 
 import org.slf4j.Logger;
@@ -17,18 +18,22 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class LobbyListTask extends AbstractClientTask<DiscoveredLobbies> {
+public class LobbyListTask extends AbstractClientTask<LobbyListResult> {
     private final static Logger Log = LoggerFactory.getLogger(LobbyLookupSite.class);
 
     private String ip;
 
-    public LobbyListTask(ClientAuthenticationKey key) {
-        this(null, key);
+
+    private String version;
+
+    public LobbyListTask(ClientAuthenticationKey key,  String version) {
+        this(null, key, version);
     }
 
-    public LobbyListTask(String ip, ClientAuthenticationKey key) {
+    public LobbyListTask(String ip, ClientAuthenticationKey key,  String version) {
         super(key);
         this.ip = ip;
+        this.version = version;
     }
 
     @Override
@@ -39,7 +44,7 @@ public class LobbyListTask extends AbstractClientTask<DiscoveredLobbies> {
         } else {
             runOnClient(ip, site);
         }
-        site.lookup(authKey);
+        site.lookup(authKey, version);
         complete(waitFor(site.getFuture()));
     }
 

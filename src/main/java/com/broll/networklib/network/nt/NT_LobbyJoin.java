@@ -5,5 +5,4 @@ public class NT_LobbyJoin {
     public int lobbyId;
     public String authenticationKey;
 
-    public String version;
 }

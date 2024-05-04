@@ -44,10 +44,13 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
         this.version = version;
     }
 
-    @ConnectionRestriction(RestrictionType.NONE)
+    @ConnectionRestriction(RestrictionType.NOT_IN_LOBBY)
     @PackageReceiver
     public void listLobbies(NT_ListLobbies list) {
-        if(tryReconnect(list.authenticationKey)){
+        if (!checkJoiningClientVersion(list.version)) {
+            return;
+        }
+        if (tryReconnect(list.authenticationKey)) {
             return;
         }
         NT_ServerInformation serverInfo = new NT_ServerInformation();
@@ -59,12 +62,7 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
     @ConnectionRestriction(RestrictionType.NOT_IN_LOBBY)
     @PackageReceiver
     public void joinLobby(NT_LobbyJoin join) {
-        if(tryReconnect(join.authenticationKey)){
-            return;
-        }
-        if(checkJoiningClientVersion(join.version)){
-            initPlayerAndJoinLobby(join.lobbyId, join.playerName, join.authenticationKey);
-        }
+        initPlayerAndJoinLobby(join.lobbyId, join.playerName, join.authenticationKey);
     }
 
     @ConnectionRestriction(RestrictionType.NOT_IN_LOBBY)
@@ -72,7 +70,7 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
     public void reconnectCheck(NT_ReconnectCheck check) {
         Log.info("check reconnect");
         String key = check.authenticationKey;
-        if(!tryReconnect(key)){
+        if (!tryReconnect(key)) {
             //is a new player, cant be reconnected
             Log.warn("Reconnect check failed: player is new and cannot be reconnected!");
             getConnection().sendTCP(new NT_LobbyNoJoin());
@@ -102,7 +100,7 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
     public void switchLobby(NT_LobbyJoin join) {
         ServerLobby from = getLobby();
         if (from.isLocked() && !getPlayer().isAllowedToLeaveLockedLobby()) {
-            Log.warn("Player "+getPlayer()+" is not allowed to switch lobby!");
+            Log.warn("Player " + getPlayer() + " is not allowed to switch lobby!");
             getConnection().sendTCP(new NT_LobbyNoJoin());
             return;
         }
@@ -128,15 +126,12 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
     @ConnectionRestriction(RestrictionType.NOT_IN_LOBBY)
     @PackageReceiver
     public void createLobby(NT_LobbyCreate create) {
-        if(!checkJoiningClientVersion(create.version)){
-            return;
-        }
         boolean reconnected = initPlayerConnection(create.playerName, create.authenticationKey);
         ServerLobby lobby = lobbyHandler.getLobbyCreationRequestHandler().createNewLobby(getPlayer(), create.lobbyName, create.settings);
         if (lobby != null) {
             joinLobby(lobby, reconnected);
         } else {
-            Log.warn("Player "+getPlayer()+" was not allowed to create lobby!");
+            Log.warn("Player " + getPlayer() + " was not allowed to create lobby!");
             //was not allowed to create lobby
             getConnection().sendTCP(new NT_LobbyNoJoin());
         }
@@ -147,7 +142,7 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
         Player player = connection.getPlayer();
         if (player != null) {
             player.updateOnlineStatus(false);
-            player.getListeners().forEach(it->((IPlayerListener)it).disconnected(player));
+            player.getListeners().forEach(it -> ((IPlayerListener) it).disconnected(player));
             if (player.inLobby()) {
                 ServerLobby lobby = player.getServerLobby();
                 if (lobby.isLocked() && !player.isAllowedToLeaveLockedLobby()) {
@@ -166,9 +161,9 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
         }
     }
 
-    private boolean checkJoiningClientVersion(String clientVersion){
+    private boolean checkJoiningClientVersion(String clientVersion) {
         if (!Objects.equals(this.version, clientVersion)) {
-            Log.warn("Player "+getPlayer()+" version does not match server!");
+            Log.warn("Player " + getPlayer() + " version does not match server!");
             NT_LobbyNoJoin nt = new NT_LobbyNoJoin();
             nt.reason = "Version mismatch with server: " + version;
             getConnection().sendTCP(nt);
@@ -205,7 +200,7 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
         getConnection().setPlayer(player);
         if (!player.isOnline()) {
             player.updateOnlineStatus(true);
-            player.getListeners().forEach(it -> ((IPlayerListener)it).reconnected(player));
+            player.getListeners().forEach(it -> ((IPlayerListener) it).reconnected(player));
         }
     }
 

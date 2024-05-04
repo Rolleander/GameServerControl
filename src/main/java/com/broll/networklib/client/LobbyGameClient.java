@@ -7,6 +7,8 @@ import com.broll.networklib.client.impl.GameLobby;
 import com.broll.networklib.client.impl.LobbyConnectionSite;
 import com.broll.networklib.client.tasks.AbstractClientTask;
 import com.broll.networklib.client.tasks.DiscoveredLobbies;
+import com.broll.networklib.client.tasks.LobbyDiscoveryResult;
+import com.broll.networklib.client.tasks.LobbyListResult;
 import com.broll.networklib.client.tasks.impl.CreateLobbyTask;
 import com.broll.networklib.client.tasks.impl.JoinLobbyTask;
 import com.broll.networklib.client.tasks.impl.LobbyDiscoveryTask;
@@ -125,24 +127,24 @@ public class LobbyGameClient implements NetworkRegister {
         return updateLobby(runTask(new ReconnectTask(ip, clientAuthenticationKey)));
     }
 
-    public CompletableFuture<List<DiscoveredLobbies>> discoverLobbies() {
-        return runTask(new LobbyDiscoveryTask(client, clientAuthenticationKey));
+    public CompletableFuture<LobbyDiscoveryResult> discoverLobbies() {
+        return runTask(new LobbyDiscoveryTask(client, clientAuthenticationKey, version));
     }
 
-    public CompletableFuture<DiscoveredLobbies> listLobbies(String ip) {
-        return runTask(new LobbyListTask(ip, clientAuthenticationKey));
+    public CompletableFuture<LobbyListResult> listLobbies(String ip) {
+        return runTask(new LobbyListTask(ip, clientAuthenticationKey, version));
     }
 
-    public CompletableFuture<DiscoveredLobbies> listLobbies() {
-        return runTask(new LobbyListTask(clientAuthenticationKey));
+    public CompletableFuture<LobbyListResult> listLobbies() {
+        return runTask(new LobbyListTask(clientAuthenticationKey, version));
     }
 
     public CompletableFuture<GameLobby> joinLobby(GameLobby lobby, String playerName) {
-        return updateLobby(runTask(new JoinLobbyTask(lobby, playerName, clientAuthenticationKey, version)));
+        return updateLobby(runTask(new JoinLobbyTask(lobby, playerName, clientAuthenticationKey)));
     }
 
     public CompletableFuture<GameLobby> createLobby(String playerName, Object lobbySettings) {
-        return updateLobby(runTask(new CreateLobbyTask(playerName, lobbySettings, clientAuthenticationKey, version)));
+        return updateLobby(runTask(new CreateLobbyTask(playerName, lobbySettings, clientAuthenticationKey)));
     }
 
     public void clearClientAuthenticationKey() {

@@ -6,6 +6,4 @@ public class NT_LobbyCreate {
     public Object settings;
     public String lobbyName;
 
-    public String version;
-
 }

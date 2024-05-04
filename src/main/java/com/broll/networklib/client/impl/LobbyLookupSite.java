@@ -4,8 +4,12 @@ import com.broll.networklib.PackageReceiver;
 import com.broll.networklib.client.auth.ClientAuthenticationKey;
 import com.broll.networklib.client.tasks.AbstractTaskSite;
 import com.broll.networklib.client.tasks.DiscoveredLobbies;
+import com.broll.networklib.client.tasks.LobbyListResult;
 import com.broll.networklib.network.nt.NT_ListLobbies;
+import com.broll.networklib.network.nt.NT_LobbyNoJoin;
+import com.broll.networklib.network.nt.NT_LobbyReconnected;
 import com.broll.networklib.network.nt.NT_ServerInformation;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,16 +17,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class LobbyLookupSite extends AbstractTaskSite<DiscoveredLobbies> {
+public class LobbyLookupSite extends AbstractTaskSite<LobbyListResult> {
 
     private final static Logger Log = LoggerFactory.getLogger(LobbyLookupSite.class);
 
-
-
-    public void lookup(ClientAuthenticationKey key) {
+    public void lookup(ClientAuthenticationKey key, String version) {
         Log.info("SEND LOOKUP");
         NT_ListLobbies nt = new NT_ListLobbies();
         nt.authenticationKey = key.getSecret();
+        nt.version = version;
         client.sendTCP(nt);
     }
 
@@ -35,7 +38,17 @@ public class LobbyLookupSite extends AbstractTaskSite<DiscoveredLobbies> {
             LobbyChange.updateLobbyInfo(lobby, lobbyInfo);
             return lobby;
         }).collect(Collectors.toList());
-        complete(new DiscoveredLobbies(info.serverName, ip, lobbies));
+        complete(new LobbyListResult(new DiscoveredLobbies(info.serverName, ip, lobbies)));
+    }
+
+    @PackageReceiver
+    public void reconnected(NT_LobbyReconnected reconnected) {
+        complete(new LobbyListResult(LobbyChange.reconnectedLobby(getClient(), reconnected)));
+    }
+
+    @PackageReceiver
+    public void wrongVersion(NT_LobbyNoJoin nt) {
+        fail("Could not list lobbies: " + nt.reason);
     }
 
 }
