@@ -14,14 +14,13 @@ import com.broll.networklib.network.nt.NT_LobbyNoJoin;
 public class CreateLobbyTask extends AbstractClientTask<GameLobby> {
 
     private String playerName;
-    private ClientAuthenticationKey authKey;
     private Object settings;
 
     private String version;
 
     public CreateLobbyTask(String playerName, Object lobbySettings, ClientAuthenticationKey authKey, String version) {
+        super(authKey);
         this.playerName = playerName;
-        this.authKey = authKey;
         this.settings = lobbySettings;
         this.version = version;
     }

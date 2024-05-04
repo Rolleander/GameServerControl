@@ -13,11 +13,10 @@ import com.broll.networklib.network.nt.NT_ReconnectCheck;
 public class ReconnectTask extends AbstractClientTask<GameLobby> {
 
     private String ip;
-    private ClientAuthenticationKey authenticationKey;
 
     public ReconnectTask(String ip, ClientAuthenticationKey authenticationKey) {
+        super(authenticationKey);
         this.ip = ip;
-        this.authenticationKey = authenticationKey;
     }
 
     @Override
@@ -32,7 +31,7 @@ public class ReconnectTask extends AbstractClientTask<GameLobby> {
 
         public void reconnectCheck() {
             NT_ReconnectCheck reconnect = new NT_ReconnectCheck();
-            reconnect.authenticationKey = authenticationKey.getSecret();
+            reconnect.authenticationKey = authKey.getSecret();
             client.sendTCP(reconnect);
         }
 

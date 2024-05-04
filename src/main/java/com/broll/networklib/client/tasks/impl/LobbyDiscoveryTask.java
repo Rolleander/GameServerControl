@@ -1,6 +1,7 @@
 package com.broll.networklib.client.tasks.impl;
 
 import com.broll.networklib.client.GameClient;
+import com.broll.networklib.client.auth.ClientAuthenticationKey;
 import com.broll.networklib.client.impl.LobbyLookupSite;
 import com.broll.networklib.client.tasks.AbstractClientTask;
 import com.broll.networklib.client.tasks.DiscoveredLobbies;
@@ -11,7 +12,8 @@ import java.util.List;
 public class LobbyDiscoveryTask extends AbstractClientTask<List<DiscoveredLobbies>> {
     private GameClient basicClient;
 
-    public LobbyDiscoveryTask(GameClient basicClient) {
+    public LobbyDiscoveryTask(GameClient basicClient, ClientAuthenticationKey key) {
+        super(key);
         this.basicClient = basicClient;
     }
 
@@ -25,7 +27,7 @@ public class LobbyDiscoveryTask extends AbstractClientTask<List<DiscoveredLobbie
         servers.forEach(server -> {
             LobbyLookupSite site = new LobbyLookupSite();
             runOnTempClient(server, site);
-            site.lookup();
+            site.lookup(authKey);
             DiscoveredLobbies lobbies = waitFor(site.getFuture());
             discoveredLobbies.add(lobbies);
         });

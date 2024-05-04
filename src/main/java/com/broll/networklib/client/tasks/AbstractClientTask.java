@@ -4,6 +4,7 @@ import com.broll.networklib.client.ClientSite;
 import com.broll.networklib.client.GameClient;
 import com.broll.networklib.client.LobbyClientSite;
 import com.broll.networklib.client.LobbyGameClient;
+import com.broll.networklib.client.auth.ClientAuthenticationKey;
 import com.broll.networklib.network.IRegisterNetwork;
 import com.broll.networklib.network.NetworkException;
 
@@ -20,11 +21,17 @@ import java.util.concurrent.TimeoutException;
 
 public abstract class AbstractClientTask<T> {
 
+    protected ClientAuthenticationKey authKey;
     private CompletableFuture<T> future;
     private LobbyGameClient client;
     private List<Runnable> onComplete = new ArrayList<>();
     private IRegisterNetwork networkRegister;
+
     private final static int TIMEOUT = 5;
+
+    public AbstractClientTask(ClientAuthenticationKey authKey){
+        this.authKey = authKey;
+    }
 
     public CompletableFuture<T> run(LobbyGameClient client, IRegisterNetwork networkRegister) {
         this.networkRegister = networkRegister;

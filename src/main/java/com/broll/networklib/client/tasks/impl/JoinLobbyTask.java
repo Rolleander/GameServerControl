@@ -15,14 +15,12 @@ public class JoinLobbyTask extends AbstractClientTask<GameLobby> {
 
     private GameLobby lobby;
     private String playerName;
-    private ClientAuthenticationKey authKey;
-
     private String version;
 
     public JoinLobbyTask(GameLobby lobby, String playerName, ClientAuthenticationKey authKey, String version) {
+        super(authKey);
         this.lobby = lobby;
         this.playerName = playerName;
-        this.authKey = authKey;
         this.version = version;
     }
 

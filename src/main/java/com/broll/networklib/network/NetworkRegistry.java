@@ -2,6 +2,7 @@ package com.broll.networklib.network;
 
 import com.broll.networklib.NetworkRegister;
 import com.broll.networklib.network.nt.NT_ChatMessage;
+import com.broll.networklib.network.nt.NT_ListLobbies;
 import com.broll.networklib.network.nt.NT_LobbyClosed;
 import com.broll.networklib.network.nt.NT_LobbyCreate;
 import com.broll.networklib.network.nt.NT_LobbyInformation;
@@ -27,6 +28,7 @@ import com.google.common.reflect.ClassPath;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
@@ -59,6 +61,7 @@ public final class NetworkRegistry {
         network.registerNetworkType(NT_LobbyUpdate.class);
         network.registerNetworkType(NT_LobbyLeave.class);
         network.registerNetworkType(NT_ReconnectCheck.class);
+        network.registerNetworkType(NT_ListLobbies.class);
         network.registerNetworkType(NT_ServerInformation.class);
         network.registerNetworkType(NT_LobbyInformation[].class);
         network.registerNetworkType(NT_LobbyPlayerInfo[].class);
@@ -70,7 +73,7 @@ public final class NetworkRegistry {
             ClassPath cp = ClassPath.from(NetworkRegistry.class.getClassLoader());
             List<Class> classes = new ArrayList<>();
             cp.getTopLevelClasses(packagePath).forEach(c->classes.add(c.load()));
-            Collections.sort(classes,(c1,c2)->c1.getName().compareTo(c2.getName()));
+            Collections.sort(classes, Comparator.comparing(Class::getName));
             classes.forEach(loadedClass->{
                 Log.trace("Register " + loadedClass);
                 kryo.register(loadedClass);

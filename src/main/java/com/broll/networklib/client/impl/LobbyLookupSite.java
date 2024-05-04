@@ -1,8 +1,10 @@
 package com.broll.networklib.client.impl;
 
 import com.broll.networklib.PackageReceiver;
+import com.broll.networklib.client.auth.ClientAuthenticationKey;
 import com.broll.networklib.client.tasks.AbstractTaskSite;
 import com.broll.networklib.client.tasks.DiscoveredLobbies;
+import com.broll.networklib.network.nt.NT_ListLobbies;
 import com.broll.networklib.network.nt.NT_ServerInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,9 +17,13 @@ public class LobbyLookupSite extends AbstractTaskSite<DiscoveredLobbies> {
 
     private final static Logger Log = LoggerFactory.getLogger(LobbyLookupSite.class);
 
-    public void lookup() {
+
+
+    public void lookup(ClientAuthenticationKey key) {
         Log.info("SEND LOOKUP");
-        client.sendTCP(new NT_ServerInformation());
+        NT_ListLobbies nt = new NT_ListLobbies();
+        nt.authenticationKey = key.getSecret();
+        client.sendTCP(nt);
     }
 
     @PackageReceiver

@@ -126,15 +126,15 @@ public class LobbyGameClient implements NetworkRegister {
     }
 
     public CompletableFuture<List<DiscoveredLobbies>> discoverLobbies() {
-        return runTask(new LobbyDiscoveryTask(client));
+        return runTask(new LobbyDiscoveryTask(client, clientAuthenticationKey));
     }
 
     public CompletableFuture<DiscoveredLobbies> listLobbies(String ip) {
-        return runTask(new LobbyListTask(ip));
+        return runTask(new LobbyListTask(ip, clientAuthenticationKey));
     }
 
     public CompletableFuture<DiscoveredLobbies> listLobbies() {
-        return runTask(new LobbyListTask());
+        return runTask(new LobbyListTask(clientAuthenticationKey));
     }
 
     public CompletableFuture<GameLobby> joinLobby(GameLobby lobby, String playerName) {

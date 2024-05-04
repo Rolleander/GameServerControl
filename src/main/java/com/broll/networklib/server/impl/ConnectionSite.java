@@ -1,6 +1,7 @@
 package com.broll.networklib.server.impl;
 
 import com.broll.networklib.PackageReceiver;
+import com.broll.networklib.network.nt.NT_ListLobbies;
 import com.broll.networklib.network.nt.NT_LobbyClosed;
 import com.broll.networklib.network.nt.NT_LobbyCreate;
 import com.broll.networklib.network.nt.NT_LobbyInformation;
@@ -45,7 +46,10 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
 
     @ConnectionRestriction(RestrictionType.NONE)
     @PackageReceiver
-    public void receive(NT_ServerInformation info) {
+    public void listLobbies(NT_ListLobbies list) {
+        if(tryReconnect(list.authenticationKey)){
+            return;
+        }
         NT_ServerInformation serverInfo = new NT_ServerInformation();
         serverInfo.serverName = serverName;
         serverInfo.lobbies = lobbyHandler.getLobbies().stream().filter(ServerLobby::isVisible).map(ServerLobby::getLobbyInfo).toArray(NT_LobbyInformation[]::new);
@@ -55,6 +59,9 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
     @ConnectionRestriction(RestrictionType.NOT_IN_LOBBY)
     @PackageReceiver
     public void joinLobby(NT_LobbyJoin join) {
+        if(tryReconnect(join.authenticationKey)){
+            return;
+        }
         if(checkJoiningClientVersion(join.version)){
             initPlayerAndJoinLobby(join.lobbyId, join.playerName, join.authenticationKey);
         }
@@ -65,6 +72,14 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
     public void reconnectCheck(NT_ReconnectCheck check) {
         Log.info("check reconnect");
         String key = check.authenticationKey;
+        if(!tryReconnect(key)){
+            //is a new player, cant be reconnected
+            Log.warn("Reconnect check failed: player is new and cannot be reconnected!");
+            getConnection().sendTCP(new NT_LobbyNoJoin());
+        }
+    }
+
+    private boolean tryReconnect(String key) {
         Player player = playerRegister.getPlayer(key);
         //player exists, has an inactive connection and is party of a lobby
         if (player != null && !player.getConnection().isActive() && player.getServerLobby() != null) {
@@ -76,10 +91,9 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
             reconnectedPlayer(player);
             getConnection().sendTCP(reconnected);
             lobby.playerChangedConnectionStatus(player, true);
+            return true;
         } else {
-            //is a new player, cant be reconnected
-            Log.warn("Reconnect check failed: player is new and cannot be reconnected!");
-            getConnection().sendTCP(new NT_LobbyNoJoin());
+            return false;
         }
     }
 
