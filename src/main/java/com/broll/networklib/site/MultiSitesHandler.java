@@ -10,6 +10,7 @@ import com.broll.networklib.site.AbstractSitesHandler;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.FrameworkMessage;
 
+import org.objenesis.strategy.StdInstantiatorStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +36,10 @@ public class MultiSitesHandler<T extends NetworkSite, C> extends AbstractSitesHa
     private Map<C, Map<Class<T>, T>> activeSites = new HashMap<>();
 
     private final Kryo kryo = new Kryo();
+
+    protected MultiSitesHandler(){
+        kryo.setInstantiatorStrategy(new StdInstantiatorStrategy());
+    }
 
     private synchronized <O> O clone(O o) {
         return kryo.copyShallow(o);

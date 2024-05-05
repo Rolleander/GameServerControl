@@ -2,22 +2,22 @@ package com.broll.networklib.client.tasks;
 
 import com.broll.networklib.client.impl.GameLobby;
 
-public class LobbyListResult {
+public class ServerResult {
 
-    private DiscoveredLobbies lobbies;
+    private ServerInformation server;
     private GameLobby reconnected;
 
 
-    public LobbyListResult(DiscoveredLobbies lobbies){
-        this.lobbies = lobbies;
+    public ServerResult(ServerInformation server){
+        this.server = server;
     }
 
-    public LobbyListResult(GameLobby reconnected){
+    public ServerResult(GameLobby reconnected){
         this.reconnected = reconnected;
     }
 
-    public DiscoveredLobbies getLobbies() {
-        return lobbies;
+    public ServerInformation getServer() {
+        return server;
     }
 
     public GameLobby getReconnectedLobby() {

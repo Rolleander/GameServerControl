@@ -6,26 +6,22 @@ import com.broll.networklib.client.auth.LastConnection;
 import com.broll.networklib.client.impl.GameLobby;
 import com.broll.networklib.client.impl.LobbyConnectionSite;
 import com.broll.networklib.client.tasks.AbstractClientTask;
-import com.broll.networklib.client.tasks.DiscoveredLobbies;
-import com.broll.networklib.client.tasks.LobbyDiscoveryResult;
-import com.broll.networklib.client.tasks.LobbyListResult;
+import com.broll.networklib.client.tasks.ServerDiscoveryResult;
+import com.broll.networklib.client.tasks.ServerResult;
 import com.broll.networklib.client.tasks.impl.CreateLobbyTask;
 import com.broll.networklib.client.tasks.impl.JoinLobbyTask;
 import com.broll.networklib.client.tasks.impl.LobbyDiscoveryTask;
 import com.broll.networklib.client.tasks.impl.LobbyListTask;
 import com.broll.networklib.client.tasks.impl.ReconnectTask;
 import com.broll.networklib.network.IRegisterNetwork;
-import com.broll.networklib.network.NetworkException;
 import com.broll.networklib.site.SiteReceiver;
 import com.esotericsoftware.kryo.Kryo;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 
 public class LobbyGameClient implements NetworkRegister {
@@ -127,15 +123,15 @@ public class LobbyGameClient implements NetworkRegister {
         return updateLobby(runTask(new ReconnectTask(ip, clientAuthenticationKey)));
     }
 
-    public CompletableFuture<LobbyDiscoveryResult> discoverLobbies() {
+    public CompletableFuture<ServerDiscoveryResult> discoverLobbies() {
         return runTask(new LobbyDiscoveryTask(client, clientAuthenticationKey, version));
     }
 
-    public CompletableFuture<LobbyListResult> listLobbies(String ip) {
+    public CompletableFuture<ServerResult> listLobbies(String ip) {
         return runTask(new LobbyListTask(ip, clientAuthenticationKey, version));
     }
 
-    public CompletableFuture<LobbyListResult> listLobbies() {
+    public CompletableFuture<ServerResult> listLobbies() {
         return runTask(new LobbyListTask(clientAuthenticationKey, version));
     }
 
@@ -144,7 +140,7 @@ public class LobbyGameClient implements NetworkRegister {
     }
 
     public CompletableFuture<GameLobby> createLobby(String playerName, Object lobbySettings) {
-        return updateLobby(runTask(new CreateLobbyTask(playerName, lobbySettings, clientAuthenticationKey)));
+        return updateLobby(runTask(new CreateLobbyTask(playerName, lobbySettings, clientAuthenticationKey, version)));
     }
 
     public void clearClientAuthenticationKey() {

@@ -44,7 +44,7 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
         this.version = version;
     }
 
-    @ConnectionRestriction(RestrictionType.NOT_IN_LOBBY)
+    @ConnectionRestriction(RestrictionType.NONE)
     @PackageReceiver
     public void listLobbies(NT_ListLobbies list) {
         if (!checkJoiningClientVersion(list.version)) {
@@ -126,6 +126,9 @@ public class ConnectionSite<L extends ILobbyData, P extends ILobbyData> extends 
     @ConnectionRestriction(RestrictionType.NOT_IN_LOBBY)
     @PackageReceiver
     public void createLobby(NT_LobbyCreate create) {
+        if (!checkJoiningClientVersion(create.version)) {
+            return;
+        }
         boolean reconnected = initPlayerConnection(create.playerName, create.authenticationKey);
         ServerLobby lobby = lobbyHandler.getLobbyCreationRequestHandler().createNewLobby(getPlayer(), create.lobbyName, create.settings);
         if (lobby != null) {

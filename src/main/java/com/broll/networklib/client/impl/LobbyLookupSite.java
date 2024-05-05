@@ -3,8 +3,8 @@ package com.broll.networklib.client.impl;
 import com.broll.networklib.PackageReceiver;
 import com.broll.networklib.client.auth.ClientAuthenticationKey;
 import com.broll.networklib.client.tasks.AbstractTaskSite;
-import com.broll.networklib.client.tasks.DiscoveredLobbies;
-import com.broll.networklib.client.tasks.LobbyListResult;
+import com.broll.networklib.client.tasks.ServerInformation;
+import com.broll.networklib.client.tasks.ServerResult;
 import com.broll.networklib.network.nt.NT_ListLobbies;
 import com.broll.networklib.network.nt.NT_LobbyNoJoin;
 import com.broll.networklib.network.nt.NT_LobbyReconnected;
@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class LobbyLookupSite extends AbstractTaskSite<LobbyListResult> {
+public class LobbyLookupSite extends AbstractTaskSite<ServerResult> {
 
     private final static Logger Log = LoggerFactory.getLogger(LobbyLookupSite.class);
 
@@ -38,12 +38,12 @@ public class LobbyLookupSite extends AbstractTaskSite<LobbyListResult> {
             LobbyChange.updateLobbyInfo(lobby, lobbyInfo);
             return lobby;
         }).collect(Collectors.toList());
-        complete(new LobbyListResult(new DiscoveredLobbies(info.serverName, ip, lobbies)));
+        complete(new ServerResult(new ServerInformation(info.serverName, ip, lobbies)));
     }
 
     @PackageReceiver
     public void reconnected(NT_LobbyReconnected reconnected) {
-        complete(new LobbyListResult(LobbyChange.reconnectedLobby(getClient(), reconnected)));
+        complete(new ServerResult(LobbyChange.reconnectedLobby(getClient(), reconnected)));
     }
 
     @PackageReceiver

@@ -16,11 +16,14 @@ public class CreateLobbyTask extends AbstractClientTask<GameLobby> {
     private String playerName;
     private Object settings;
 
+    private String version;
 
-    public CreateLobbyTask(String playerName, Object lobbySettings, ClientAuthenticationKey authKey) {
+
+    public CreateLobbyTask(String playerName, Object lobbySettings, ClientAuthenticationKey authKey, String version) {
         super(authKey);
         this.playerName = playerName;
         this.settings = lobbySettings;
+        this.version = version;
     }
 
     @Override
@@ -39,6 +42,7 @@ public class CreateLobbyTask extends AbstractClientTask<GameLobby> {
             create.lobbyName = playerName + "'s Lobby";
             create.authenticationKey = authKey.getSecret();
             create.settings = settings;
+            create.version = version;
             client.sendTCP(create);
         }
 

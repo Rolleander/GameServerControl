@@ -136,7 +136,7 @@ public class LobbyConnectionTests extends NetworkTest {
         LobbyGameClient client = testClient("Tester");
         client.setVersion("different");
         //client should not be able to join
-        expectFailure(() ->  joinLobby(client, lobby), "java.util.concurrent.ExecutionException: com.broll.networklib.network.NetworkException: java.util.concurrent.ExecutionException: java.lang.Exception: Could not join lobby: Version mismatch with server: null");
+        expectFailure(() ->  joinLobby(client, lobby), "java.util.concurrent.ExecutionException: com.broll.networklib.network.NetworkException: java.util.concurrent.ExecutionException: java.lang.Exception: Could not list lobbies: Version mismatch with server: null");
     }
     @Test
     public void reconnect() throws ExecutionException, InterruptedException {

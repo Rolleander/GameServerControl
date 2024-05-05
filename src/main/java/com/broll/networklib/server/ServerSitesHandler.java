@@ -4,6 +4,10 @@ import com.broll.networklib.site.MultiSitesHandler;
 
 public class ServerSitesHandler extends MultiSitesHandler<ServerSite, NetworkConnection> {
 
+    public ServerSitesHandler(){
+        super();
+    }
+
     public final ServerSite accessSite(NetworkConnection connectionContext, Class<ServerSite> siteClass) {
         ServerSite site = getSiteInstances(connectionContext).get(siteClass);
         if (site == null) {

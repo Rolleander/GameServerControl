@@ -133,7 +133,7 @@ public abstract class NetworkTest<L extends ILobbyData, P extends ILobbyData> {
 
     public void joinLobby(LobbyGameClient client, ServerLobby serverLobby) {
         String name = clients.get(client).playerName;
-        Optional<GameLobby> lobbyOptional = waitFor(client.listLobbies()).getLobbies().stream().filter(lobby -> lobby.getLobbyId() == serverLobby.getId()).findFirst();
+        Optional<GameLobby> lobbyOptional = waitFor(client.listLobbies()).getServer().getLobbies().stream().filter(lobby -> lobby.getLobbyId() == serverLobby.getId()).findFirst();
         if(lobbyOptional.isPresent()){
             GameLobby lobby = lobbyOptional.get();
             Log.info("Client " + name + " discovered lobby " + lobby.getName());
