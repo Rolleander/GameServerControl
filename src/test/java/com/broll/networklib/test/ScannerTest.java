@@ -13,45 +13,49 @@ import java.util.stream.Collectors;
 public class ScannerTest {
 
     @Test
-    public void scansMethodsCorrectly(){
+    public void scansMethodsCorrectly() {
         Assert.assertArrayEquals(new String[]{"com.broll.networklib.test.ScannerTest$A:test"},
                 scanPackageReceivers(new A()));
         Assert.assertArrayEquals(new String[]{"com.broll.networklib.test.ScannerTest$B:test",
                         "com.broll.networklib.test.ScannerTest$B:test2"},
                 scanPackageReceivers(new B()));
-        Assert.assertArrayEquals(new String[]{"com.broll.networklib.test.ScannerTest$C:test2",
-                        "com.broll.networklib.test.ScannerTest$A:test"},
+        Assert.assertArrayEquals(new String[]{"com.broll.networklib.test.ScannerTest$A:test",
+                        "com.broll.networklib.test.ScannerTest$C:test2"
+                },
                 scanPackageReceivers(new C()));
     }
 
-    private String[] scanPackageReceivers(Object o){
-        return AnnotationScanner.findAnnotatedMethods(o, PackageReceiver.class).stream().map(m->
-               m.getDeclaringClass().getName()+":"+ m.getName()).toArray(String[]::new);
+    private String[] scanPackageReceivers(Object o) {
+        return AnnotationScanner.findAnnotatedMethods(o, PackageReceiver.class).stream().map(m ->
+                m.getDeclaringClass().getName() + ":" + m.getName()).sorted().toArray(String[]::new);
     }
 
-    public static class A{
+    public static class A {
 
         @PackageReceiver
-        void test(){
+        void test() {
 
         }
     }
 
-    public static class B extends A{
+    public static class B extends A {
         @PackageReceiver
-        void test(){
+        @Override
+        void test() {
             super.test();
         }
+
         @PackageReceiver
-        void test2(){
+        void test2() {
 
         }
 
     }
-    public static class C extends A{
+
+    public static class C extends A {
 
         @PackageReceiver
-        void test2(){
+        void test2() {
 
         }
 
